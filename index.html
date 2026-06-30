@@ -219,7 +219,7 @@
                 <div class="onboarding-step" data-step="5" id="step-5">
                     <h2>Customize Your Modules</h2>
                     <p>Select which bento modules you want visible on your study workspace. You can toggle them later in layout settings.</p>
-                    <div class="question-options grid-3-cols" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-top: 15px;">
+                    <div class="question-options grid-3-cols onboard-modules-grid">
                         <label class="option-card">
                             <input type="checkbox" name="onboard-module" value="widget-pomodoro" checked>
                             <div class="option-content">
@@ -271,7 +271,7 @@
                         </label>
                     </div>
 
-                    <div class="button-group" style="margin-top: 20px;">
+                    <div class="button-group mt-20">
                         <button class="btn btn-back" onclick="prevOnboardingStep()"><i data-lucide="arrow-left"></i> Back</button>
                         <button class="btn btn-next btn-primary" onclick="finishOnboarding()">Enter Space <i data-lucide="check"></i></button>
                     </div>
@@ -676,7 +676,7 @@
 
             <div class="widget-header">
                 <h3><i data-lucide="clipboard-list"></i> To-Do & Logger</h3>
-                <div class="tracker-tabs" style="display: flex; gap: 6px;">
+                <div class="tracker-tabs">
                     <button class="btn btn-sm active" id="tracker-tab-todo" onclick="setTrackerTab('todo')">To-Do</button>
                     <button class="btn btn-sm" id="tracker-tab-log" onclick="setTrackerTab('log')">Log History</button>
                 </div>
@@ -684,28 +684,28 @@
             <div class="widget-body">
                 <!-- Tab Content 1: To-Do List -->
                 <div id="tracker-content-todo">
-                    <div class="session-form" style="margin-bottom: 12px;">
-                        <div class="input-group" style="display: flex; gap: 6px; width: 100%;">
+                    <div class="session-form session-form-todo">
+                        <div class="input-group input-group-todo">
                             <input type="text" id="todo-text" placeholder="Add a study task..." style="flex-grow: 1;">
-                            <input type="number" id="todo-duration" placeholder="Mins" min="1" max="600" style="width: 90px; font-size: 0.95rem; font-weight: bold; text-align: center;">
+                            <input type="number" id="todo-duration" placeholder="Mins" min="1" max="600" class="todo-duration-input">
                             <button class="btn btn-primary" onclick="addTodoItem()"><i data-lucide="plus"></i></button>
                         </div>
                     </div>
                     
-                    <div class="todo-list-container" style="max-height: 180px; overflow-y: auto; margin-bottom: 15px;">
-                        <ul id="todo-list-ul" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                    <div class="todo-list-container">
+                        <ul id="todo-list-ul" class="todo-list-ul">
                             <!-- Todo items rendered dynamically -->
                         </ul>
                     </div>
                     
-                    <button class="btn btn-primary" id="start-todo-session-btn" onclick="startTodoSession()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <button class="btn btn-primary btn-start-session" id="start-todo-session-btn" onclick="startTodoSession()">
                         <i data-lucide="play-circle"></i> Start Selected Task Session
                     </button>
                 </div>
 
                 <!-- Tab Content 2: Log History -->
-                <div id="tracker-content-log" style="display: none;">
-                    <div class="session-form" style="margin-bottom: 15px;">
+                <div id="tracker-content-log" class="tracker-content-log">
+                    <div class="session-form session-form-log">
                         <div class="input-group">
                             <input type="text" id="session-subject" placeholder="What are you studying? (e.g. Math)">
                             <input type="number" id="session-duration" placeholder="Mins" min="1" max="600">
@@ -737,46 +737,46 @@
             </div>
             <div class="widget-body flex-col align-center">
                 <!-- Aura Level & XP Progress Bar -->
-                <div class="aura-level-container" style="display: flex; flex-direction: column; width: 100%; gap: 6px; margin-bottom: 12px; margin-top: 5px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700;">
+                <div class="aura-level-container">
+                    <div class="aura-xp-header">
                         <span>Aura Level <span id="aura-level-val">1</span></span>
-                        <span id="aura-xp-val" style="color: var(--primary);">0 / 100 XP</span>
+                        <span id="aura-xp-val">0 / 100 XP</span>
                     </div>
-                    <div class="progress-bar-container" style="height: 8px;">
-                        <div class="progress-bar-fill" id="aura-xp-bar" style="width: 0%; background-color: var(--primary); transition: width 0.4s ease;"></div>
+                    <div class="progress-bar-container xp-bar-container">
+                        <div class="progress-bar-fill" id="aura-xp-bar"></div>
                     </div>
                 </div>
 
                 <!-- Aura Flora Sprout Display -->
-                <div class="aura-flora-card" style="width: 100%; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.04); border: var(--border-thickness) var(--border-style) var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 12px; position: relative;">
-                    <div id="aura-flora-svg-container" style="width: 120px; height: 110px; display: flex; align-items: center; justify-content: center; position: relative;">
+                <div class="aura-flora-card">
+                    <div id="aura-flora-svg-container">
                         <!-- Flora SVG injected dynamically -->
                     </div>
-                    <div id="flora-status-text" style="font-family: var(--font-heading); font-size: 0.82rem; font-weight: bold; margin-top: 6px; color: var(--text-main);">Sprout sleeping...</div>
+                    <div id="flora-status-text">Sprout sleeping...</div>
                     
                     <!-- Cumulative Active Plant progress bar -->
-                    <div class="active-plant-progress-container" style="width: 100%; display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
+                    <div class="active-plant-progress-container">
+                        <div class="active-plant-progress-header">
                             <span>Active Sprout Progress</span>
                             <span id="active-plant-growth-val">0%</span>
                         </div>
-                        <div class="progress-bar-container" style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; border: 1px solid var(--border-color);">
-                            <div class="progress-bar-fill" id="active-plant-growth-bar" style="width: 0%; background-color: #22c55e; transition: width 0.3s ease;"></div>
+                        <div class="progress-bar-container active-plant-growth-bar-container">
+                            <div class="progress-bar-fill" id="active-plant-growth-bar"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Streak & Garden buttons -->
-                <div style="display: flex; width: 100%; gap: 10px; margin-bottom: 15px;">
-                    <div class="streak-giant-card" style="flex: 1.1; padding: 10px; margin: 0; min-height: unset; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; border-radius: 12px;">
-                        <i data-lucide="flame" class="streak-giant-flame" style="width: 24px; height: 24px;"></i>
-                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                            <span class="streak-giant-number" id="streak-giant-count" style="font-size: 1.3rem; line-height: 1;">0</span>
-                            <span style="font-size: 0.65rem; color: var(--text-muted);">Day Streak</span>
+                <div class="streak-garden-buttons-row">
+                    <div class="streak-giant-card">
+                        <i data-lucide="flame" class="streak-giant-flame"></i>
+                        <div class="streak-giant-details">
+                            <span class="streak-giant-number" id="streak-giant-count">0</span>
+                            <span class="streak-giant-label">Day Streak</span>
                         </div>
                     </div>
-                    <button class="btn btn-sm btn-outline" onclick="openModal('garden-modal')" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 12px; flex: 0.9; font-weight: bold; font-size: 0.8rem;">
-                        <i data-lucide="sprout" style="width: 14px; height: 14px; color: #22c55e;"></i> My Garden
+                    <button class="btn btn-sm btn-outline btn-garden" onclick="openModal('garden-modal')">
+                        <i data-lucide="sprout" class="btn-garden-icon"></i> My Garden
                     </button>
                 </div>
 
@@ -885,8 +885,8 @@
                                 </div>
                             </div>
                             <!-- Binaural beats channel -->
-                             <div class="ambient-control-card" style="grid-column: span 2; border-color: var(--primary); background: rgba(255,255,255,0.06); padding: 12px 14px;">
-                                 <span class="ambient-label" style="color: var(--primary); font-weight: bold; display: flex; align-items: center; gap: 6px;"><i data-lucide="sparkles"></i> Binaural Focus Waves (Alpha)</span>
+                             <div class="ambient-control-card binaural-card">
+                                 <span class="ambient-label binaural-label"><i data-lucide="sparkles"></i> Binaural Focus Waves (Alpha)</span>
                                  <div class="slider-row">
                                      <input type="range" class="ambient-slider" id="ambient-synth" min="0" max="1" step="0.05" value="0" oninput="adjustSynthVolume(this.value)">
                                      <button class="btn-audio-mute" id="mute-synth" onclick="toggleSynthSound()"><i data-lucide="volume-x"></i></button>
@@ -936,58 +936,48 @@
 
     <!-- Hidden Widget Notification Modal -->
     <div id="hidden-widget-modal" class="modal-overlay">
-        <div class="modal-card scale-in" style="max-width: 400px; padding: 30px;">
+        <div class="modal-card scale-in modal-card-hidden">
             <div class="modal-info-step">
-                <div class="onboarding-icon" style="background-color: var(--bg-app); margin-bottom: 15px;">
-                    <i data-lucide="info" style="color: var(--primary); width: 32px; height: 32px;"></i>
+                <div class="onboarding-icon onboarding-icon-info">
+                    <i data-lucide="info" class="icon-info"></i>
                 </div>
-                <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 10px;">Widget Hidden</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px;">
+                <h3 class="modal-title-hidden">Widget Hidden</h3>
+                <p class="modal-desc-hidden">
                     You have hidden a widget. Don't worry! You can easily re-enable it or reset the entire layout from <strong>Workspace Settings &rarr; Layout</strong> at any time.
                 </p>
-                <button class="btn btn-primary" onclick="closeModal('hidden-widget-modal')" style="width: 100%;">Got it!</button>
+                <button class="btn btn-primary btn-full-width" onclick="closeModal('hidden-widget-modal')">Got it!</button>
             </div>
         </div>
     </div>
 
     <!-- Focus Garden Modal -->
     <div id="garden-modal" class="modal-overlay">
-        <div class="modal-card scale-in" style="max-width: 680px; width: 90%; padding: 0; overflow: hidden; background: var(--bg-card); border: var(--border-thickness) var(--border-style) var(--border-color);">
-            <div class="modal-header" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color);">
-                <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin: 0;">
-                    <i data-lucide="sprout" style="color: #22c55e;"></i> My Virtual Focus Garden
+        <div class="modal-card scale-in modal-card-garden">
+            <div class="modal-header modal-header-garden">
+                <h3 class="modal-title-garden">
+                    <i data-lucide="sprout" class="btn-garden-icon"></i> My Virtual Focus Garden
                 </h3>
-                <button class="btn-close-drawer" onclick="closeModal('garden-modal')" style="background: none; border: none; cursor: pointer; color: var(--text-main); font-size: 1.2rem; display: flex; align-items: center;"><i data-lucide="x"></i></button>
+                <button class="btn-close-drawer btn-close-garden" onclick="closeModal('garden-modal')"><i data-lucide="x"></i></button>
             </div>
-            <div class="modal-body" style="padding: 20px; max-height: 80vh; overflow-y: auto;">
-                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; margin-top: 0; line-height: 1.45;">
+            <div class="modal-body modal-body-garden">
+                <p class="modal-desc-garden">
                     Every 60 minutes of study or checked-off tasks fully matures your active plant! Once maxed out, your plant is permanently potted below to grow your digital sanctuary.
                 </p>
                 
                 <!-- The Visual Illustrated Garden Container -->
-                <div class="visual-garden-wrapper" style="width: 100%; border-radius: 12px; border: var(--border-thickness) var(--border-style) var(--border-color); overflow: hidden; position: relative;">
-                    <!-- Grassy/Sky Backdrop -->
-                    <div class="garden-scenery" style="height: 380px; width: 100%; background: linear-gradient(to bottom, #dbeafe 0%, #bfdbfe 40%, #86efac 40%, #22c55e 100%); position: relative; overflow: hidden;">
-                        <!-- Static Trees and Birdhouse decor -->
-                        <div class="garden-decor-tree" style="position: absolute; bottom: 80px; left: 20px; width: 80px; height: 160px; background: #166534; border-radius: 40px 40px 0 0; opacity: 0.85;">
-                            <!-- Trunk -->
-                            <div style="position: absolute; bottom: -80px; left: 32px; width: 16px; height: 80px; background: #78350f;"></div>
+                <div class="visual-garden-wrapper">
+                    <!-- Grassy/Sky Backdrop (Static decorative trees and fence removed for a premium minimal design) -->
+                    <div class="garden-scenery">
+                        <div class="garden-clouds">
+                            <div class="cloud cloud-1"></div>
+                            <div class="cloud cloud-2"></div>
                         </div>
-                        <div class="garden-decor-fence" style="position: absolute; bottom: 60px; right: 20px; display: flex; gap: 4px; opacity: 0.7;">
-                            <!-- Decorative Fence Slats -->
-                            <div style="width: 8px; height: 40px; background: #ffffff; border-radius: 4px 4px 0 0;"></div>
-                            <div style="width: 8px; height: 40px; background: #ffffff; border-radius: 4px 4px 0 0;"></div>
-                            <div style="width: 8px; height: 40px; background: #ffffff; border-radius: 4px 4px 0 0;"></div>
-                            <!-- Birdhouse on post next to fence -->
-                            <div style="position: absolute; bottom: 20px; left: -16px; width: 4px; height: 50px; background: #78350f;"></div>
-                            <div style="position: absolute; bottom: 65px; left: -26px; width: 24px; height: 24px; background: #b45309; border-radius: 4px;">
-                                <div style="position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: #171717; border-radius: 50%;"></div>
-                                <div style="position: absolute; top: -8px; left: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 10px solid #78350f;"></div>
-                            </div>
+                        <div class="garden-hills">
+                            <div class="hill hill-back"></div>
+                            <div class="hill hill-front"></div>
                         </div>
-                        
                         <!-- 12 Grassy/Shelved Garden Plots -->
-                        <div id="garden-plots-grid" style="position: absolute; bottom: 15px; left: 5%; width: 90%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; z-index: 10;">
+                        <div id="garden-plots-grid" class="garden-plots-grid">
                             <!-- Dynamically populated via JS -->
                         </div>
                     </div>

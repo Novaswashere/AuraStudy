@@ -1703,8 +1703,15 @@ body[data-theme="cyberpunk"] .analog-clock-face {
 }
 
 .todo-item {
-    border-color: var(--border-color) !important;
-    background-color: var(--bg-app) !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--bg-app);
+    border: var(--border-thickness) var(--border-style) var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 .todo-item.selected {
     border-color: var(--primary) !important;
@@ -1825,13 +1832,16 @@ body[data-theme="cyberpunk"] .log-duration-badge {
 .streak-giant-card {
     background-color: var(--bg-app);
     border: var(--border-thickness) var(--border-style) var(--border-color);
-    width: 100%;
-    padding: 20px;
-    border-radius: var(--border-radius);
+    padding: 10px;
+    margin: 0;
+    min-height: unset;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    margin-bottom: 20px;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 12px;
+    flex: 1.1;
 }
 
 .streak-giant-flame-container {
@@ -2978,6 +2988,379 @@ body.video-active .video-bg-container {
 .garden-plot:hover .garden-plot-tooltip {
     opacity: 1;
     bottom: -18px;
+}
+
+/* ==========================================================================
+   Code Refactoring, UI Overhaul & AI Slop Removal Additions
+   ========================================================================== */
+
+/* 1. Onboardingstep 5 grid */
+.onboard-modules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+    margin-top: 15px;
+}
+
+/* 2. Tracker tab list & form */
+.tracker-tabs {
+    display: flex;
+    gap: 6px;
+}
+.session-form-todo {
+    margin-bottom: 12px;
+}
+.input-group-todo {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+.todo-duration-input {
+    width: 90px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    text-align: center;
+}
+.todo-list-container {
+    max-height: 180px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+}
+.todo-list-ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.btn-start-session {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.tracker-content-log {
+    display: none;
+}
+.session-form-log {
+    margin-bottom: 15px;
+}
+
+/* 3. Streaks & Flora displaying */
+.aura-level-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 6px;
+    margin-bottom: 12px;
+    margin-top: 5px;
+}
+.aura-xp-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+#aura-xp-val {
+    color: var(--primary);
+}
+.xp-bar-container {
+    height: 8px;
+}
+#aura-xp-bar {
+    width: 0%;
+    background-color: var(--primary);
+    transition: width 0.4s ease;
+}
+.aura-flora-card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: var(--border-thickness) var(--border-style) var(--border-color);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    position: relative;
+}
+#aura-flora-svg-container {
+    width: 120px;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+#flora-status-text {
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: bold;
+    margin-top: 6px;
+    color: var(--text-main);
+}
+.active-plant-progress-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+}
+.active-plant-progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.active-plant-growth-bar-container {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+#active-plant-growth-bar {
+    width: 0%;
+    background-color: #22c55e;
+    transition: width 0.3s ease;
+}
+.streak-garden-buttons-row {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.streak-giant-flame {
+    width: 24px;
+    height: 24px;
+}
+.streak-giant-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.streak-giant-number {
+    font-size: 1.3rem;
+    line-height: 1;
+    font-weight: 700;
+}
+.streak-giant-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+.btn-garden {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 12px;
+    flex: 0.9;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+.btn-garden-icon {
+    width: 14px;
+    height: 14px;
+    color: #22c55e;
+}
+
+/* 4. Music player adjustments */
+.binaural-card {
+    grid-column: span 2;
+    border-color: var(--primary) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    padding: 12px 14px;
+}
+.binaural-label {
+    color: var(--primary);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 5. Modals & Garden Modal overlay styling */
+.modal-card-hidden {
+    max-width: 400px;
+    padding: 30px;
+}
+.onboarding-icon-info {
+    background-color: var(--bg-app);
+    margin-bottom: 15px;
+}
+.icon-info {
+    color: var(--primary);
+    width: 32px;
+    height: 32px;
+}
+.modal-title-hidden {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.modal-desc-hidden {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+.btn-full-width {
+    width: 100%;
+}
+
+.modal-card-garden {
+    max-width: 680px;
+    width: 90%;
+    padding: 0;
+    overflow: hidden;
+    background: var(--bg-card);
+    border: var(--border-thickness) var(--border-style) var(--border-color);
+}
+.modal-header-garden {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed var(--border-color);
+}
+.modal-title-garden {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+.btn-close-garden {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-main);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+}
+.modal-body-garden {
+    padding: 20px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.modal-desc-garden {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    margin-top: 0;
+    line-height: 1.45;
+}
+.visual-garden-wrapper {
+    width: 100%;
+    border-radius: 12px;
+    border: var(--border-thickness) var(--border-style) var(--border-color);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Premium scenery backdrop for Focus Garden */
+.garden-scenery {
+    height: 380px;
+    width: 100%;
+    background: linear-gradient(to bottom, #a0c4ff 0%, #c1d3fe 45%, #b7e4c7 45%, #74c69d 70%, #52b788 100%);
+    position: relative;
+    overflow: hidden;
+}
+.garden-clouds {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    height: 60px;
+    pointer-events: none;
+}
+.cloud {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 20px;
+    filter: blur(1px);
+}
+.cloud-1 {
+    width: 80px;
+    height: 25px;
+    left: 10%;
+    animation: floatCloud 25s infinite linear;
+}
+.cloud-2 {
+    width: 110px;
+    height: 30px;
+    right: 15%;
+    animation: floatCloud 35s infinite linear reverse;
+}
+@keyframes floatCloud {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(40px); }
+    100% { transform: translateX(0); }
+}
+.garden-hills {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 160px;
+    pointer-events: none;
+    z-index: 1;
+}
+.hill {
+    position: absolute;
+    border-radius: 50%;
+    width: 140%;
+    left: -20%;
+}
+.hill-back {
+    height: 200px;
+    background: linear-gradient(to bottom, #b7e4c7, #95d5b2);
+    bottom: -60px;
+    opacity: 0.85;
+}
+.hill-front {
+    height: 170px;
+    background: linear-gradient(to bottom, #95d5b2, #74c69d);
+    bottom: -80px;
+    z-index: 2;
+}
+
+.garden-plots-grid {
+    position: absolute;
+    bottom: 20px;
+    left: 5%;
+    width: 90%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    z-index: 10;
+}
+
+/* Micro-animations for potted plants */
+@keyframes sway {
+    0% { transform: scale(0.65) rotate(0deg); }
+    50% { transform: scale(0.65) rotate(1.5deg); }
+    100% { transform: scale(0.65) rotate(0deg); }
+}
+.garden-plot.occupied .plot-plant {
+    animation: sway 4s infinite ease-in-out;
+}
+
+@keyframes activeSproutSway {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(2deg); }
+    100% { transform: rotate(0deg); }
+}
+#aura-flora-svg-container svg {
+    animation: activeSproutSway 5s infinite ease-in-out;
+    transform-origin: bottom center;
 }
 
 

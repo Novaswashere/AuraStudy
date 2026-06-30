@@ -239,11 +239,7 @@ function checkDateRollover() {
 }
 
 function getTodayDateString() {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const date = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${date}`;
+    return new Date().toLocaleDateString('en-CA');
 }
 
 // --------------------------------------------------------------------------
@@ -888,23 +884,23 @@ function initClocks() {
 
 function updateClocks() {
     const now = new Date();
-    let hours = now.getHours();
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    
     const is12Hour = state.clockFormat12;
-    let ampm = "";
-
-    if (is12Hour) {
-        ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12;
-        hours = hours ? hours : 12; 
-    }
     
-    const formattedHours = String(hours).padStart(2, '0');
-
+    // Native formatting
+    const timeParts = now.toLocaleTimeString('en-US', {
+        hour12: is12Hour,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    }).split(' ');
+    
+    const timeStr = timeParts[0];
+    const ampm = timeParts[1] || "";
+    
+    const [hours, minutes, seconds] = timeStr.split(':');
+    
     // Update Header Clock
-    document.getElementById("header-time-display").textContent = `${formattedHours}:${minutes}:${seconds}`;
+    document.getElementById("header-time-display").textContent = timeStr;
     document.getElementById("header-ampm-display").textContent = ampm;
 
     // Update Widget Digital Clock
@@ -913,7 +909,7 @@ function updateClocks() {
     const digitalClockAmpmEl = document.getElementById("digital-clock-ampm");
 
     if (digitalClockTimeEl) {
-        digitalClockTimeEl.textContent = `${formattedHours}:${minutes}`;
+        digitalClockTimeEl.textContent = `${hours}:${minutes}`;
         digitalClockSecsEl.textContent = seconds;
         digitalClockAmpmEl.textContent = ampm;
     }
@@ -1364,7 +1360,7 @@ function renderTodoList() {
     
     if (state.todoList.length === 0) {
         listUl.innerHTML = `
-            <li class="empty-state" style="text-align: center; color: var(--text-muted); padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <li class="empty-state">
                 <i data-lucide="clipboard" style="width: 24px; height: 24px; opacity: 0.5;"></i>
                 <span>No tasks in your list. Add one above!</span>
             </li>
@@ -1379,18 +1375,6 @@ function renderTodoList() {
     state.todoList.forEach(item => {
         const li = document.createElement("li");
         li.className = `todo-item ${item.completed ? 'completed' : ''} ${selectedTodoId === item.id ? 'selected' : ''}`;
-        li.style.cssText = `
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: var(--bg-app);
-            border: var(--border-thickness) var(--border-style) ${selectedTodoId === item.id ? 'var(--primary)' : 'var(--border-color)'};
-            border-radius: 8px;
-            padding: 8px 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: ${selectedTodoId === item.id ? '0 0 10px var(--primary)' : 'none'};
-        `;
         
         li.onclick = (e) => {
             if (e.target.closest('.todo-delete-btn') || e.target.closest('.todo-checkbox')) return;
@@ -1399,7 +1383,7 @@ function renderTodoList() {
         };
 
         const leftSide = document.createElement("div");
-        leftSide.style.cssText = "display: flex; align-items: center; gap: 10px;";
+        leftSide.className = "todo-left";
         
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -1409,29 +1393,28 @@ function renderTodoList() {
         
         const textSpan = document.createElement("span");
         textSpan.textContent = item.text;
-        textSpan.style.cssText = item.completed ? "text-decoration: line-through; opacity: 0.6;" : "";
+        if (item.completed) {
+            textSpan.style.textDecoration = "line-through";
+            textSpan.style.opacity = "0.6";
+        }
         
         leftSide.appendChild(checkbox);
         leftSide.appendChild(textSpan);
         
         const rightSide = document.createElement("div");
-        rightSide.style.cssText = "display: flex; align-items: center; gap: 8px;";
+        rightSide.className = "todo-right";
         
         const durationBadge = document.createElement("span");
+        durationBadge.className = "todo-duration";
         durationBadge.textContent = `${item.duration}m`;
-        durationBadge.style.cssText = `
-            font-size: 0.85rem;
-            background-color: var(--primary);
-            color: #171717;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-weight: bold;
-        `;
         
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "todo-delete-btn";
         deleteBtn.innerHTML = '<i data-lucide="trash-2" style="width: 14px; height: 14px; color: #ef4444;"></i>';
-        deleteBtn.style.cssText = "background: none; border: none; cursor: pointer; padding: 2px;";
+        deleteBtn.style.background = "none";
+        deleteBtn.style.border = "none";
+        deleteBtn.style.cursor = "pointer";
+        deleteBtn.style.padding = "2px";
         deleteBtn.onclick = () => deleteTodoItem(item.id);
         
         rightSide.appendChild(durationBadge);
@@ -1540,6 +1523,9 @@ function logStudySession(subject, duration, isTimerSession = false) {
 
 function renderRecentSessions() {
     const container = document.getElementById("session-history-list");
+    if (!container) return;
+    container.innerHTML = "";
+    
     const todayStr = getTodayDateString();
     const todaysSessions = state.sessions.filter(s => s.date === todayStr);
 
@@ -1551,23 +1537,35 @@ function renderRecentSessions() {
             </div>
         `;
     } else {
-        container.innerHTML = todaysSessions.map(s => `
-            <div class="session-item-log">
-                <div class="log-details">
-                    <span class="log-subject">${escapeHTML(s.subject)}</span>
-                    <span class="log-time">${s.timestamp}</span>
-                </div>
-                <div class="log-duration-badge">${s.duration} mins</div>
-            </div>
-        `).join('');
+        todaysSessions.forEach(s => {
+            const itemDiv = document.createElement("div");
+            itemDiv.className = "session-item-log";
+            
+            const detailsDiv = document.createElement("div");
+            detailsDiv.className = "log-details";
+            
+            const subjectSpan = document.createElement("span");
+            subjectSpan.className = "log-subject";
+            subjectSpan.textContent = s.subject;
+            
+            const timeSpan = document.createElement("span");
+            timeSpan.className = "log-time";
+            timeSpan.textContent = s.timestamp;
+            
+            detailsDiv.appendChild(subjectSpan);
+            detailsDiv.appendChild(timeSpan);
+            
+            const durationDiv = document.createElement("div");
+            durationDiv.className = "log-duration-badge";
+            durationDiv.textContent = `${s.duration} mins`;
+            
+            itemDiv.appendChild(detailsDiv);
+            itemDiv.appendChild(durationDiv);
+            
+            container.appendChild(itemDiv);
+        });
     }
-    lucide.createIcons();
-}
-
-function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, 
-        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-    );
+    if (window.lucide) lucide.createIcons();
 }
 
 // --------------------------------------------------------------------------
@@ -1609,45 +1607,22 @@ function verifyStreakValidity() {
 
 function calculateConsecutiveStreak() {
     let streakCount = 0;
-    const todayStr = getTodayDateString();
+    let checkDate = new Date();
     
-    // Streak is updated as long as there is ANY study minutes (> 0) logged today
-    const todayMins = getDailyStudyMinutes(todayStr);
-    const todayMet = todayMins > 0;
-    
-    if (todayMet) {
-        streakCount++;
+    // If we haven't studied today, start checking from yesterday to keep the streak alive
+    const todayStr = checkDate.toLocaleDateString('en-CA');
+    if (getDailyStudyMinutes(todayStr) === 0) {
+        checkDate.setDate(checkDate.getDate() - 1);
     }
     
-    let dateIndex = 1;
+    // Count consecutive days going backwards
     while (true) {
-        const d = new Date();
-        d.setDate(d.getDate() - dateIndex);
-        const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        
-        const mins = getDailyStudyMinutes(dStr);
-        if (mins > 0) {
+        const dateStr = checkDate.toLocaleDateString('en-CA');
+        if (getDailyStudyMinutes(dateStr) > 0) {
             streakCount++;
-            dateIndex++;
+            checkDate.setDate(checkDate.getDate() - 1);
         } else {
             break;
-        }
-    }
-    
-    // If today is not studied yet, but yesterday was, keep the streak alive showing yesterday's count
-    if (!todayMet && streakCount === 0) {
-        let yesterdayIndex = 1;
-        while (true) {
-            const d = new Date();
-            d.setDate(d.getDate() - yesterdayIndex);
-            const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            const mins = getDailyStudyMinutes(dStr);
-            if (mins > 0) {
-                streakCount++;
-                yesterdayIndex++;
-            } else {
-                break;
-            }
         }
     }
     
@@ -1989,103 +1964,51 @@ function toggleAmbientSound(type) {
 // 14. Synthesized Alert Sounds
 // --------------------------------------------------------------------------
 
-function synthesizeAlertSound() {
+function playTone(freq, type, startOffset, duration, volume, rampToFreq = null) {
     initAudioContext();
     if (!audioCtx) return;
-
     const now = audioCtx.currentTime;
+    const startTime = now + startOffset;
+
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startTime);
+    if (rampToFreq) {
+        osc.frequency.exponentialRampToValueAtTime(rampToFreq, startTime + duration);
+    }
+
+    gainNode.gain.setValueAtTime(volume, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.1);
+}
+
+function synthesizeAlertSound() {
     const soundType = state.alarmSound;
 
     if (soundType === "cyberpunk") {
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        osc1.type = "sawtooth";
-        osc1.frequency.setValueAtTime(523.25, now); 
-        osc1.frequency.exponentialRampToValueAtTime(880, now + 0.4);
-
-        osc2.type = "triangle";
-        osc2.frequency.setValueAtTime(659.25, now); 
-        osc2.frequency.exponentialRampToValueAtTime(1046.5, now + 0.4);
-
-        gainNode.gain.setValueAtTime(0.2, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-
-        osc1.connect(gainNode);
-        osc2.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.5);
-        osc2.stop(now + 0.5);
+        playTone(523.25, "sawtooth", 0, 0.5, 0.2, 880);
+        playTone(659.25, "triangle", 0, 0.5, 0.2, 1046.5);
     } 
     else if (soundType === "anime") {
         const notes = [523.25, 659.25, 783.99, 1046.5]; 
         notes.forEach((freq, idx) => {
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(freq, now + idx * 0.1);
-            
-            gainNode.gain.setValueAtTime(0.15, now + idx * 0.1);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.15);
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.start(now + idx * 0.1);
-            osc.stop(now + idx * 0.1 + 0.2);
+            playTone(freq, "sine", idx * 0.1, 0.15, 0.15);
         });
     } 
     else if (soundType === "aesthetic") {
-        const osc = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(293.66, now); 
-        
-        const subOsc = audioCtx.createOscillator();
-        const subGain = audioCtx.createGain();
-        subOsc.type = "sine";
-        subOsc.frequency.setValueAtTime(587.33, now); 
-        
-        gainNode.gain.setValueAtTime(0.3, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 2.0); 
-
-        subGain.gain.setValueAtTime(0.08, now);
-        subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-
-        osc.connect(gainNode);
-        subOsc.connect(subGain);
-        
-        gainNode.connect(audioCtx.destination);
-        subGain.connect(audioCtx.destination);
-        
-        osc.start(now);
-        subOsc.start(now);
-        
-        osc.stop(now + 2.0);
-        subOsc.stop(now + 1.2);
+        playTone(293.66, "sine", 0, 2.0, 0.3);
+        playTone(587.33, "sine", 0, 1.2, 0.08);
     } 
     else {
         [440, 440].forEach((freq, idx) => {
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            osc.type = "sine";
-            osc.frequency.value = freq;
-            
-            gainNode.gain.setValueAtTime(0.1, now + idx * 0.25);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.25 + 0.15);
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.start(now + idx * 0.25);
-            osc.stop(now + idx * 0.25 + 0.2);
+            playTone(freq, "sine", idx * 0.25, 0.15, 0.1);
         });
     }
 }
@@ -2345,104 +2268,133 @@ function getPlantSVGContent(type, isMatured = false) {
     if (type === "cyberpunk") {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M35,90 L65,90 L70,105 L30,105 Z" style="fill: #3f3f46;" />
-                <path class="flora-stem" d="M50,90 L50,45 L50,30" style="stroke: #ff007f; stroke-dasharray: 60; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 60};" />
-                <polygon class="flora-leaf ${visibleClass}" points="50,70 30,65 50,60" style="fill: #00f0ff;" />
-                <polygon class="flora-leaf ${visibleClass}" points="50,55 70,50 50,45" style="fill: #00f0ff;" />
-                <polygon class="flora-flower ${visibleClass}" points="50,15 35,35 50,45 65,35" style="fill: #ff007f; stroke: #00f0ff;" />
+                <path class="flora-pot" d="M32,90 L68,90 L72,105 L28,105 Z" fill="#181024" stroke="#ff007f" stroke-width="1.5" />
+                <path class="flora-stem" d="M50,90 L50,45" stroke="#00ffff" stroke-width="3" fill="none" style="stroke-dasharray: 45; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 45};" />
+                <polygon class="flora-leaf ${visibleClass}" points="50,75 32,65 50,55" fill="#bc13fe" opacity="0.8" />
+                <polygon class="flora-leaf ${visibleClass}" points="50,60 68,50 50,40" fill="#bc13fe" opacity="0.8" />
+                <g class="flora-flower ${visibleClass}">
+                    <polygon points="50,15 35,38 50,48 65,38" fill="#ff007f" stroke="#00ffff" stroke-width="1.5" />
+                    <polygon points="50,22 42,38 50,45 58,38" fill="#00ffff" opacity="0.7" />
+                </g>
             </svg>
         `;
     } else if (type === "watercolour" || type === "watercolor") {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M30,90 L70,90 L60,105 L40,105 Z" style="fill: #475569;" />
-                <path class="flora-stem" d="M50,90 C45,70 55,50 50,35" style="stroke: #0d9488; stroke-dasharray: 65; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 65};" />
-                <circle class="flora-leaf ${visibleClass}" cx="38" cy="65" r="8" style="fill: #0d9488;" />
-                <circle class="flora-leaf ${visibleClass}" cx="62" cy="52" r="8" style="fill: #0d9488;" />
-                <path class="flora-flower ${visibleClass}" d="M50,35 C42,25 35,35 50,15 C65,35 58,25 50,35" style="fill: #f43f5e;" />
+                <path class="flora-pot" d="M35,90 L65,90 L68,105 M32,105 L35,90 Z" fill="#475569" opacity="0.8" />
+                <path class="flora-stem" d="M50,90 C45,70 55,55 50,35" stroke="#14b8a6" stroke-width="3" fill="none" stroke-linecap="round" style="stroke-dasharray: 60; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 60};" />
+                <path class="flora-leaf ${visibleClass}" d="M45,70 C30,70 25,60 40,58 C45,58 48,64 45,70 Z" fill="#0d9488" opacity="0.8" />
+                <path class="flora-leaf ${visibleClass}" d="M55,55 C70,55 75,45 60,43 C55,43 52,49 55,55 Z" fill="#0d9488" opacity="0.8" />
+                <g class="flora-flower ${visibleClass}">
+                    <path d="M50,35 C42,20 32,30 50,12 C68,30 58,20 50,35 Z" fill="#f43f5e" opacity="0.9" />
+                    <path d="M50,35 C46,24 38,28 50,18 C62,28 54,24 50,35 Z" fill="#fb7185" />
+                </g>
             </svg>
         `;
     } else if (type === "cute-anime" || type === "anime") {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M35,90 L65,90 L60,105 L40,105 Z" style="fill: #78350f;" />
-                <path class="flora-stem" d="M50,90 Q40,65 50,40" style="stroke: #db2777; stroke-dasharray: 60; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 60};" />
-                <path class="flora-leaf ${visibleClass}" d="M43,65 C33,65 38,55 43,65" style="fill: #f472b6;" />
-                <path class="flora-leaf ${visibleClass}" d="M47,50 C57,50 52,40 47,50" style="fill: #f472b6;" />
-                <circle class="flora-flower ${visibleClass}" cx="50" cy="35" r="8" style="fill: #fdf2f8; stroke: #db2777;" />
+                <path class="flora-pot" d="M35,90 L65,90 L60,105 L40,105 Z" fill="#d97706" />
+                <path class="flora-stem" d="M50,90 C48,70 52,50 50,35" stroke="#b45309" stroke-width="4" fill="none" stroke-linecap="round" style="stroke-dasharray: 55; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 55};" />
+                <circle class="flora-leaf ${visibleClass}" cx="38" cy="65" r="7" fill="#f472b6" />
+                <circle class="flora-leaf ${visibleClass}" cx="62" cy="50" r="7" fill="#f472b6" />
+                <g class="flora-flower ${visibleClass}">
+                    <circle cx="50" cy="30" r="12" fill="#fdf2f8" stroke="#db2777" stroke-width="2" />
+                    <circle cx="50" cy="30" r="4" fill="#fcd34d" />
+                    <path d="M47,29 Q50,32 53,29" stroke="#db2777" stroke-width="1.5" fill="none" />
+                </g>
             </svg>
         `;
     } else if (type === "minimalist") {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110">
-                <path class="flora-pot" d="M32,90 L68,90 L68,105 L32,105 Z" style="fill: #171717;" />
-                <path class="flora-stem" d="M50,90 L50,40" style="stroke: var(--text-main); stroke-dasharray: 50; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 50};" />
-                <polygon class="flora-leaf ${visibleClass}" points="50,75 35,70 50,65" style="fill: var(--text-muted);" />
-                <polygon class="flora-leaf ${visibleClass}" points="50,60 65,55 50,50" style="fill: var(--text-muted);" />
-                <polygon class="flora-flower ${visibleClass}" points="50,40 40,25 50,15 60,25" style="fill: var(--text-main); stroke: var(--border-color);" />
+                <polygon class="flora-pot" points="30,90 70,90 62,105 38,105" fill="#171717" />
+                <path class="flora-stem" d="M50,90 L50,55" stroke="#171717" stroke-width="3" fill="none" style="stroke-dasharray: 35; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 35};" />
+                <polygon class="flora-leaf ${visibleClass}" points="50,75 35,70 45,60" fill="#737373" />
+                <polygon class="flora-leaf ${visibleClass}" points="50,65 65,60 55,50" fill="#a3a3a3" />
+                <g class="flora-flower ${visibleClass}">
+                    <polygon points="50,55 35,40 50,22 65,40" fill="#171717" />
+                    <polygon points="50,48 40,38 50,28 60,38" fill="#ffffff" stroke="#171717" stroke-width="1" />
+                </g>
             </svg>
         `;
     } else if (type === "sunflower") {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #78350f;" />
-                <path class="flora-stem" d="M50,90 L50,45" style="stroke: #22c55e; stroke-width: 4px; stroke-linecap: round; fill: none; stroke-dasharray: 45; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 45};" />
-                <circle class="flora-leaf ${visibleClass}" cx="42" cy="68" r="6" style="fill: #22c55e;" />
-                <circle class="flora-leaf ${visibleClass}" cx="58" cy="58" r="6" style="fill: #22c55e;" />
+                <path class="flora-pot" d="M32,90 L68,90 L64,105 L36,105 Z" fill="#7c2d12" />
+                <path class="flora-stem" d="M50,90 L50,45" stroke="#15803d" stroke-width="4" stroke-linecap="round" fill="none" style="stroke-dasharray: 45; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 45};" />
+                <path class="flora-leaf ${visibleClass}" d="M50,70 C40,70 36,62 44,60 C50,60 50,66 50,70 Z" fill="#166534" />
+                <path class="flora-leaf ${visibleClass}" d="M50,58 C60,58 64,50 56,48 C50,48 50,54 50,58 Z" fill="#166534" />
                 <g class="flora-flower ${visibleClass}">
-                    <circle cx="50" cy="35" r="14" style="fill: #eab308; stroke: #ca8a04; stroke-width: 1px;" />
-                    <circle cx="50" cy="35" r="7" style="fill: #451a03;" />
+                    <circle cx="50" cy="35" r="18" fill="#ca8a04" />
+                    <circle cx="50" cy="35" r="15" fill="#f59e0b" />
+                    <circle cx="50" cy="35" r="9" fill="#451a03" />
                 </g>
             </svg>
         `;
     } else if (type === "cactus") {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #d1d5db;" />
-                <path class="flora-stem" d="M50,90 L50,45" style="stroke: #166534; stroke-width: 14px; stroke-linecap: round; fill: none; stroke-dasharray: 45; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 45};" />
-                <line class="flora-leaf ${visibleClass}" x1="43" y1="75" x2="38" y2="75" style="stroke: #f3f4f6; stroke-width: 1.5px;" />
-                <line class="flora-leaf ${visibleClass}" x1="57" y1="60" x2="62" y2="60" style="stroke: #f3f4f6; stroke-width: 1.5px;" />
-                <polygon class="flora-flower ${visibleClass}" points="50,45 44,35 50,28 56,35" style="fill: #f43f5e;" />
+                <path class="flora-pot" d="M33,90 L67,90 L62,105 L38,105 Z" fill="#4b5563" />
+                <path class="flora-stem" d="M50,90 L50,50" stroke="#166534" stroke-width="12" stroke-linecap="round" fill="none" style="stroke-dasharray: 40; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 40};" />
+                <path class="flora-leaf ${visibleClass}" d="M44,70 C36,70 38,58 44,62" stroke="#166534" stroke-width="8" stroke-linecap="round" fill="none" />
+                <path class="flora-leaf ${visibleClass}" d="M56,60 C64,60 62,48 56,52" stroke="#166534" stroke-width="8" stroke-linecap="round" fill="none" />
+                <g class="flora-flower ${visibleClass}">
+                    <polygon points="50,50 44,38 50,30 56,38" fill="#ec4899" />
+                    <polygon points="50,46 47,38 50,33 53,38" fill="#f472b6" />
+                </g>
             </svg>
         `;
     } else if (type === "mushroom") {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #4b5563;" />
-                <path class="flora-stem" d="M50,90 L50,55" style="stroke: #f3f4f6; stroke-width: 12px; stroke-linecap: round; fill: none; stroke-dasharray: 35; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 35};" />
-                <path class="flora-flower ${visibleClass}" d="M30,55 C30,25 70,25 70,55 Z" style="fill: #ef4444;" />
-                <circle class="flora-flower ${visibleClass}" cx="42" cy="40" r="3" style="fill: #ffffff;" />
-                <circle class="flora-flower ${visibleClass}" cx="58" cy="45" r="3" style="fill: #ffffff;" />
+                <path class="flora-pot" d="M32,90 L68,90 L63,105 L37,105 Z" fill="#374151" />
+                <path class="flora-stem" d="M50,90 L50,55" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round" fill="none" style="stroke-dasharray: 35; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 35};" />
+                <circle class="flora-leaf ${visibleClass}" cx="35" cy="88" r="5" fill="#15803d" />
+                <circle class="flora-leaf ${visibleClass}" cx="65" cy="88" r="5" fill="#15803d" />
+                <g class="flora-flower ${visibleClass}">
+                    <path d="M30,55 C30,22 70,22 70,55 Z" fill="#ef4444" />
+                    <circle cx="42" cy="38" r="3" fill="#ffffff" />
+                    <circle cx="58" cy="42" r="2.5" fill="#ffffff" />
+                    <circle cx="50" cy="48" r="3" fill="#ffffff" />
+                </g>
             </svg>
         `;
     } else if (type === "rose") {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #3f3f46;" />
-                <path class="flora-stem" d="M50,90 C45,70 52,50 50,38" style="stroke: #065f46; stroke-width: 4px; stroke-linecap: round; fill: none; stroke-dasharray: 55; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 55};" />
-                <polygon class="flora-leaf ${visibleClass}" points="47,65 35,62 46,55" style="fill: #065f46;" />
-                <polygon class="flora-leaf ${visibleClass}" points="53,52 65,49 54,42" style="fill: #065f46;" />
-                <path class="flora-flower ${visibleClass}" d="M50,38 C40,25 60,25 50,38 Z" style="fill: #b91c1c;" />
+                <path class="flora-pot" d="M32,90 L68,90 L64,105 L36,105 Z" fill="#1f2937" />
+                <path class="flora-stem" d="M50,90 C46,75 54,60 50,42" stroke="#065f46" stroke-width="3" fill="none" stroke-linecap="round" style="stroke-dasharray: 50; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 50};" />
+                <polygon class="flora-leaf ${visibleClass}" points="47,65 35,62 46,55" fill="#065f46" />
+                <polygon class="flora-leaf ${visibleClass}" points="53,52 65,49 54,42" fill="#065f46" />
+                <g class="flora-flower ${visibleClass}">
+                    <circle cx="50" cy="36" r="12" fill="#b91c1c" />
+                    <path d="M44,32 C48,26 52,26 56,32 C50,38 46,38 44,32 Z" fill="#dc2626" />
+                    <circle cx="50" cy="36" r="5" fill="#7f1d1d" />
+                </g>
             </svg>
         `;
     } else if (type === "ivy") {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #7c2d12;" />
-                <path class="flora-stem" d="M50,90 C35,70 65,50 50,28" style="stroke: #166534; stroke-width: 3px; stroke-linecap: round; fill: none; stroke-dasharray: 70; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 70};" />
-                <circle class="flora-leaf ${visibleClass}" cx="40" cy="72" r="5" style="fill: #15803d;" />
-                <circle class="flora-leaf ${visibleClass}" cx="58" cy="55" r="5" style="fill: #15803d;" />
-                <circle class="flora-flower ${visibleClass}" cx="46" cy="35" r="5" style="fill: #16a34a;" />
+                <path class="flora-pot" d="M32,90 L68,90 L64,105 L36,105 Z" fill="#78350f" />
+                <path class="flora-stem" d="M50,90 C40,75 60,60 48,32" stroke="#166534" stroke-width="3" fill="none" stroke-linecap="round" style="stroke-dasharray: 65; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 65};" />
+                <path class="flora-leaf ${visibleClass}" d="M42,75 Q32,70 40,65 Z" fill="#15803d" />
+                <path class="flora-leaf ${visibleClass}" d="M58,58 Q68,53 60,48 Z" fill="#15803d" />
+                <g class="flora-flower ${visibleClass}">
+                    <path d="M46,38 Q38,28 48,25 Z" fill="#16a34a" />
+                    <path d="M52,30 Q60,20 50,17 Z" fill="#22c55e" />
+                </g>
             </svg>
         `;
     } else {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #7c2d12;" />
-                <path class="flora-stem" d="M50,90 Q55,60 50,30" style="stroke: #15803d; stroke-dasharray: 65; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 65};" />
-                <path class="flora-leaf ${visibleClass}" d="M46,65 C38,60 40,50 48,55 Z" style="fill: #22c55e;" />
-                <path class="flora-leaf ${visibleClass}" d="M54,50 C62,45 60,35 52,40 Z" style="fill: #22c55e;" />
-                <circle class="flora-flower ${visibleClass}" cx="50" cy="25" r="9" style="fill: #eab308; stroke: #eab308;" />
+                <path class="flora-pot" d="M35,90 L70,90 L66,105 M30,105 L32,90 Z" fill="#7c2d12" />
+                <path class="flora-stem" d="M50,90 C45,75 40,65 50,50 C55,42 45,35 50,25" stroke="#6e5a4f" stroke-width="5" fill="none" stroke-linecap="round" style="stroke-dasharray: 80; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 80};" />
+                <ellipse class="flora-leaf ${visibleClass}" cx="35" cy="55" rx="14" ry="10" fill="#a3b899" />
+                <ellipse class="flora-leaf ${visibleClass}" cx="62" cy="45" rx="12" ry="8" fill="#a3b899" />
+                <ellipse class="flora-flower ${visibleClass}" cx="50" cy="22" rx="18" ry="12" fill="#8fa89b" stroke="#778f82" />
             </svg>
         `;
     }
