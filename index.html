@@ -881,14 +881,14 @@
                                     <button class="btn-audio-mute" id="mute-rainy_town" onclick="toggleAmbientSound('rainy_town')"><i data-lucide="volume-x"></i></button>
                                 </div>
                             </div>
-                            <!-- Procedural Ambient Synth Card -->
-                            <div class="ambient-control-card" style="grid-column: span 2; border-color: var(--primary); background: rgba(255,255,255,0.06); padding: 12px 14px;">
-                                <span class="ambient-label" style="color: var(--primary); font-weight: bold; display: flex; align-items: center; gap: 6px;"><i data-lucide="sparkles"></i> Generative Flow Synth</span>
-                                <div class="slider-row">
-                                    <input type="range" class="ambient-slider" id="ambient-synth" min="0" max="1" step="0.05" value="0" oninput="adjustSynthVolume(this.value)">
-                                    <button class="btn-audio-mute" id="mute-synth" onclick="toggleSynthSound()"><i data-lucide="volume-x"></i></button>
-                                </div>
-                            </div>
+                            <!-- Binaural beats channel -->
+                             <div class="ambient-control-card" style="grid-column: span 2; border-color: var(--primary); background: rgba(255,255,255,0.06); padding: 12px 14px;">
+                                 <span class="ambient-label" style="color: var(--primary); font-weight: bold; display: flex; align-items: center; gap: 6px;"><i data-lucide="sparkles"></i> Binaural Focus Waves (Alpha)</span>
+                                 <div class="slider-row">
+                                     <input type="range" class="ambient-slider" id="ambient-synth" min="0" max="1" step="0.05" value="0" oninput="adjustSynthVolume(this.value)">
+                                     <button class="btn-audio-mute" id="mute-synth" onclick="toggleSynthSound()"><i data-lucide="volume-x"></i></button>
+                                 </div>
+                             </div>
                         </div>
                     </div>
 

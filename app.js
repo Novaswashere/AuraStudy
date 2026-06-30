@@ -48,7 +48,12 @@ let state = {
         "widget-streak",
         "widget-analytics",
         "widget-music"
-    ]
+    ],
+    pomoSessionsCompleted: 0,
+    auraXp: 0,
+    auraLevel: 1,
+    gardenJournal: [],
+    synthVolume: 0
 };
 
 // Application Timers State
@@ -185,10 +190,18 @@ function loadStateFromStorage() {
             }
 
             // Ensure Aura Flora variables exist
-            state.auraXp = state.auraXp || 0;
-            state.auraLevel = state.auraLevel || 1;
-            state.gardenJournal = state.gardenJournal || [];
-            state.synthVolume = state.synthVolume || 0;
+            if (typeof state.auraXp !== "number" || isNaN(state.auraXp)) {
+                state.auraXp = 0;
+            }
+            if (typeof state.auraLevel !== "number" || isNaN(state.auraLevel) || state.auraLevel < 1) {
+                state.auraLevel = 1;
+            }
+            if (!Array.isArray(state.gardenJournal)) {
+                state.gardenJournal = [];
+            }
+            if (typeof state.synthVolume !== "number" || isNaN(state.synthVolume)) {
+                state.synthVolume = 0;
+            }
         } catch (e) {
             console.error("Failed to parse saved state, using defaults", e);
         }
@@ -2250,98 +2263,81 @@ function updateFloraGrowth(percentage) {
     }
 }
 
-// Generative Flow Synth Audio Engine
+// Generative Flow Synth Audio Engine (Now running Binaural Focus Waves)
 let synthInterval = null;
 let synthGain = null;
 let isSynthMuted = false;
 let synthVolumeLevel = 0;
-
-const pentatonicScale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; // C4, D4, E4, G4, A4, C5
+let binauralNodes = null;
 
 function initSynth() {
     if (audioCtx) return;
-    
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AudioContextClass();
-    
-    synthGain = audioCtx.createGain();
-    synthGain.gain.setValueAtTime(0, audioCtx.currentTime);
-    
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(800, audioCtx.currentTime);
-    
-    const delay = audioCtx.createDelay(1.0);
-    delay.delayTime.setValueAtTime(0.4, audioCtx.currentTime);
-    
-    const delayGain = audioCtx.createGain();
-    delayGain.gain.setValueAtTime(0.45, audioCtx.currentTime);
-    
-    filter.connect(synthGain);
-    filter.connect(delay);
-    delay.connect(delayGain);
-    delayGain.connect(filter);
-    
-    synthGain.connect(audioCtx.destination);
 }
 
-function playSynthNote() {
-    if (!audioCtx || isSynthMuted || synthVolumeLevel === 0) return;
+function startBinauralBeats(volume) {
+    initSynth();
+    stopBinauralBeats();
+    
+    if (volume === 0 || isSynthMuted) return;
+    
     if (audioCtx.state === "suspended") {
         audioCtx.resume();
     }
     
     const now = audioCtx.currentTime;
-    let scale = pentatonicScale;
-    if (state.theme === "cyberpunk") {
-        scale = [220.00, 261.63, 293.66, 311.13, 392.00, 440.00];
+    
+    const oscL = audioCtx.createOscillator();
+    oscL.type = "sine";
+    oscL.frequency.setValueAtTime(200, now);
+    
+    const oscR = audioCtx.createOscillator();
+    oscR.type = "sine";
+    oscR.frequency.setValueAtTime(210, now);
+    
+    const pannerL = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+    const pannerR = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+    
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.setValueAtTime(volume * 0.15, now);
+    
+    if (pannerL && pannerR) {
+        pannerL.pan.setValueAtTime(-1, now);
+        pannerR.pan.setValueAtTime(1, now);
+        
+        oscL.connect(pannerL);
+        pannerL.connect(gainNode);
+        
+        oscR.connect(pannerR);
+        pannerR.connect(gainNode);
+    } else {
+        oscL.connect(gainNode);
+        oscR.connect(gainNode);
     }
     
-    const pitch = scale[Math.floor(Math.random() * scale.length)];
-    const osc = audioCtx.createOscillator();
-    const oscGain = audioCtx.createGain();
+    gainNode.connect(audioCtx.destination);
     
-    osc.type = (state.theme === "cyberpunk" || state.theme === "minimalist") ? "triangle" : "sine";
-    osc.frequency.setValueAtTime(pitch, now);
+    oscL.start(now);
+    oscR.start(now);
     
-    oscGain.gain.setValueAtTime(0, now);
-    oscGain.gain.linearRampToValueAtTime(0.20, now + 0.1);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-    
-    osc.connect(oscGain);
-    oscGain.connect(synthGain);
-    
-    osc.start(now);
-    osc.stop(now + 1.9);
+    binauralNodes = { oscL, oscR, gainNode };
 }
 
-function startSynthLoop() {
-    if (synthInterval) clearInterval(synthInterval);
-    if (synthVolumeLevel === 0 || isSynthMuted) return;
-
-    let intervalMs = 2500;
-    let progress = 0;
-    
-    if (pomoIsRunning) {
-        progress = (pomoTotalDuration - pomoTimeRemaining) / pomoTotalDuration;
-    } else if (stopwatchIsRunning) {
-        const secondsRunning = Math.floor(stopwatchElapsed / 1000);
-        progress = Math.min(1.0, secondsRunning / 1800);
+function stopBinauralBeats() {
+    if (binauralNodes) {
+        try {
+            binauralNodes.oscL.stop();
+            binauralNodes.oscR.stop();
+            binauralNodes.oscL.disconnect();
+            binauralNodes.oscR.disconnect();
+            binauralNodes.gainNode.disconnect();
+        } catch (e) {}
+        binauralNodes = null;
     }
-    
-    if (progress > 0.3 && progress <= 0.7) {
-        intervalMs = 1800;
-    } else if (progress > 0.7) {
-        intervalMs = 1200;
-    }
-    
-    synthInterval = setInterval(playSynthNote, intervalMs);
 }
 
 function adjustSynthVolume(val) {
-    initSynth();
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    
     synthVolumeLevel = parseFloat(val);
     state.synthVolume = synthVolumeLevel;
     saveStateToStorage();
@@ -2349,41 +2345,30 @@ function adjustSynthVolume(val) {
     if (synthVolumeLevel > 0) {
         isSynthMuted = false;
         document.getElementById("mute-synth").innerHTML = '<i data-lucide="volume-2"></i>';
-        synthGain.gain.setValueAtTime(synthVolumeLevel, audioCtx.currentTime);
-        
-        if (!synthInterval) {
-            startSynthLoop();
-        }
+        startBinauralBeats(synthVolumeLevel);
     } else {
-        synthGain.gain.setValueAtTime(0, audioCtx.currentTime);
-        if (synthInterval) {
-            clearInterval(synthInterval);
-            synthInterval = null;
-        }
+        stopBinauralBeats();
     }
     if (window.lucide) lucide.createIcons();
 }
 
 function toggleSynthSound() {
-    initSynth();
     isSynthMuted = !isSynthMuted;
-    
     const muteBtn = document.getElementById("mute-synth");
+    
     if (isSynthMuted) {
-        synthGain.gain.setValueAtTime(0, audioCtx.currentTime);
+        stopBinauralBeats();
         muteBtn.innerHTML = '<i data-lucide="volume-x"></i>';
-        if (synthInterval) {
-            clearInterval(synthInterval);
-            synthInterval = null;
-        }
     } else {
         synthVolumeLevel = state.synthVolume || 0.3;
-        synthGain.gain.setValueAtTime(synthVolumeLevel, audioCtx.currentTime);
         document.getElementById("ambient-synth").value = synthVolumeLevel;
         muteBtn.innerHTML = '<i data-lucide="volume-2"></i>';
-        
-        startSynthLoop();
+        startBinauralBeats(synthVolumeLevel);
     }
     if (window.lucide) lucide.createIcons();
+}
+
+function startSynthLoop() {
+    // Blank placeholder for timer ticks compatibility
 }
 
