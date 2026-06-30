@@ -25,9 +25,15 @@ AuraStudy is a lightweight, interactive web application designed to help users a
 ```
 AuraStudy/
 │
+├── server.py                       # local host server script
+├── run_server.bat                  # Creates a localhost server and redirects you to your default bowser
 ├── app.js                          # Main application logic and interactivity
-├── images/
-│   └── cozy fireplace.png          # Ambient background asset
+├── style.css                       # Main application styling
+├── index.html                      # Main application wireframe and skeleton
+├── images/                         # Ambient background assets
+│   └── cozy fireplace.png
+├── sounds/                         # Ambient Music Assets
+|   └── ambient_rain.m4a           
 ├── LICENSE                         # Repository license
 └── README.md                       # Project documentation
 ```
