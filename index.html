@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraStudy — Gamified Study Dashboard</title>
+    <meta name="description" content="A premium customizable study workspace to stay on track, track progress, log sessions, build streaks, and study in your preferred aesthetic.">
+    <!-- Google Fonts for Themes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Inter:wght@300;400;500;700&family=Orbitron:wght@400;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Quicksand:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Main CSS stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Canvas Confetti for Streaks and Goals -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body data-theme="aesthetic">
+
+    <!-- Video Background Container -->
+    <div id="video-bg-container" class="video-bg-container"></div>
+
+    <!-- Hidden HTML5 Audio Elements for Local Real-life sounds -->
+    <audio id="audio-rain" src="sounds/ambient_rain.m4a" loop preload="auto"></audio>
+    <audio id="audio-fireplace1" src="sounds/fireplace.mp3" loop preload="auto"></audio>
+    <audio id="audio-fireplace2" src="sounds/fireplace2.mp3" loop preload="auto"></audio>
+    <audio id="audio-rainy_town" src="sounds/rainy down with birds singing.mp3" loop preload="auto"></audio>
+
+    <!-- Canvas for Watercolour background effect -->
+    <div class="watercolour-bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Onboarding / Check-In Modal Overlay -->
+    <div id="onboarding-modal" class="modal-overlay active">
+        <div class="modal-card scale-in">
+            <div class="onboarding-steps">
+                <!-- Step 1: Welcome -->
+                <div class="onboarding-step active" data-step="1" id="step-1">
+                    <div class="onboarding-icon">
+                        <i data-lucide="sparkles" class="icon-pulse"></i>
+                    </div>
+                    <h2>Welcome to AuraStudy</h2>
+                    <p>Your personalized, gamified study space designed to adapt to your style and help you conquer your goals.</p>
+                    <button class="btn btn-next btn-primary" onclick="nextOnboardingStep()">Get Started <i data-lucide="arrow-right"></i></button>
+                </div>
+
+                <!-- Step 2: Questionnaire -->
+                <div class="onboarding-step" data-step="2" id="step-2">
+                    <h2>Define Your Goals</h2>
+                    <p>What are you hoping to achieve with AuraStudy? (Select your main focus)</p>
+                    <div class="question-options">
+                        <label class="option-card">
+                            <input type="radio" name="study-goal" value="consistency" checked>
+                            <div class="option-content">
+                                <i data-lucide="calendar"></i>
+                                <span>Build Consistency</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="study-goal" value="focus">
+                            <div class="option-content">
+                                <i data-lucide="zap"></i>
+                                <span>Enhance Deep Focus</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="study-goal" value="exams">
+                            <div class="option-content">
+                                <i data-lucide="award"></i>
+                                <span>Ace Exams & Projects</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <p class="question-label">What do you struggle with the most?</p>
+                    <div class="question-options">
+                        <label class="option-card">
+                            <input type="radio" name="study-struggle" value="distractions" checked>
+                            <div class="option-content">
+                                <i data-lucide="bell-off"></i>
+                                <span>Distractions / Social Media</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="study-struggle" value="procrastination">
+                            <div class="option-content">
+                                <i data-lucide="hourglass"></i>
+                                <span>Starting / Procrastinating</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="study-struggle" value="burnout">
+                            <div class="option-content">
+                                <i data-lucide="battery-low"></i>
+                                <span>Burnout / Running out of Steam</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-back" onclick="prevOnboardingStep()"><i data-lucide="arrow-left"></i> Back</button>
+                        <button class="btn btn-next btn-primary" onclick="nextOnboardingStep()">Next <i data-lucide="arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Choose Visual Style -->
+                <div class="onboarding-step" data-step="3" id="step-3">
+                    <h2>Choose Your Vibe</h2>
+                    <p>Select an initial interface style. You can change this anytime from the dashboard.</p>
+                    <div class="theme-selections">
+                        <label class="theme-card-option" data-theme-val="aesthetic">
+                            <input type="radio" name="selected-theme" value="aesthetic" checked>
+                            <div class="theme-preview aesthetic-preview">
+                                <div class="preview-header"></div>
+                                <div class="preview-body">
+                                    <span>Cozy Aesthetic</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="theme-card-option" data-theme-val="minimalist">
+                            <input type="radio" name="selected-theme" value="minimalist">
+                            <div class="theme-preview minimalist-preview">
+                                <div class="preview-header"></div>
+                                <div class="preview-body">
+                                    <span>Minimalist</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="theme-card-option" data-theme-val="cyberpunk">
+                            <input type="radio" name="selected-theme" value="cyberpunk">
+                            <div class="theme-preview cyberpunk-preview">
+                                <div class="preview-header"></div>
+                                <div class="preview-body">
+                                    <span>Cyberpunk</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="theme-card-option" data-theme-val="anime">
+                            <input type="radio" name="selected-theme" value="anime">
+                            <div class="theme-preview anime-preview">
+                                <div class="preview-header"></div>
+                                <div class="preview-body">
+                                    <span>Cute Anime</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="theme-card-option" data-theme-val="watercolour">
+                            <input type="radio" name="selected-theme" value="watercolour">
+                            <div class="theme-preview watercolour-preview">
+                                <div class="preview-header"></div>
+                                <div class="preview-body">
+                                    <span>Watercolour</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-back" onclick="prevOnboardingStep()"><i data-lucide="arrow-left"></i> Back</button>
+                        <button class="btn btn-next btn-primary" onclick="nextOnboardingStep()">Next <i data-lucide="arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Choose Background Backdrop -->
+                <div class="onboarding-step" data-step="4" id="step-4">
+                    <h2>Choose Your Backdrop</h2>
+                    <p>Select an initial ambient background environment to study in. You can change this anytime.</p>
+                    <div class="question-options">
+                        <label class="option-card">
+                            <input type="radio" name="selected-backdrop" value="none" checked>
+                            <div class="option-content">
+                                <i data-lucide="image"></i>
+                                <span>None (Gradients)</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="selected-backdrop" value="lofi">
+                            <div class="option-content">
+                                <i data-lucide="music-4"></i>
+                                <span>Lofi Girl</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="selected-backdrop" value="cafe">
+                            <div class="option-content">
+                                <i data-lucide="coffee"></i>
+                                <span>Rainy Cafe</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="selected-backdrop" value="fireplace">
+                            <div class="option-content">
+                                <i data-lucide="flame"></i>
+                                <span>Cozy Fireplace</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="selected-backdrop" value="cyberpunk">
+                            <div class="option-content">
+                                <i data-lucide="terminal"></i>
+                                <span>Cyberpunk Rain</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-back" onclick="prevOnboardingStep()"><i data-lucide="arrow-left"></i> Back</button>
+                        <button class="btn btn-next btn-primary" onclick="nextOnboardingStep()">Next <i data-lucide="arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Customize Homescreen Modules -->
+                <div class="onboarding-step" data-step="5" id="step-5">
+                    <h2>Customize Your Modules</h2>
+                    <p>Select which bento modules you want visible on your study workspace. You can toggle them later in layout settings.</p>
+                    <div class="question-options grid-3-cols" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-top: 15px;">
+                        <label class="option-card">
+                            <input type="checkbox" name="onboard-module" value="widget-pomodoro" checked>
+                            <div class="option-content">
+                                <i data-lucide="timer"></i>
+                                <span>Pomodoro</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="checkbox" name="onboard-module" value="widget-stopwatch" checked>
+                            <div class="option-content">
+                                <i data-lucide="clock"></i>
+                                <span>Stopwatch</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="checkbox" name="onboard-module" value="widget-clocks" checked>
+                            <div class="option-content">
+                                <i data-lucide="globe"></i>
+                                <span>Clock Station</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="checkbox" name="onboard-module" value="widget-tracker" checked>
+                            <div class="option-content">
+                                <i data-lucide="clipboard-list"></i>
+                                <span>To-Do List</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="checkbox" name="onboard-module" value="widget-streak" checked>
+                            <div class="option-content">
+                                <i data-lucide="flame"></i>
+                                <span>Streak</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="checkbox" name="onboard-module" value="widget-analytics" checked>
+                            <div class="option-content">
+                                <i data-lucide="bar-chart-2"></i>
+                                <span>Analytics</span>
+                            </div>
+                        </label>
+                        <label class="option-card">
+                            <input type="checkbox" name="onboard-module" value="widget-music" checked>
+                            <div class="option-content">
+                                <i data-lucide="music"></i>
+                                <span>Audio Mixer</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button class="btn btn-back" onclick="prevOnboardingStep()"><i data-lucide="arrow-left"></i> Back</button>
+                        <button class="btn btn-next btn-primary" onclick="finishOnboarding()">Enter Space <i data-lucide="check"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 6: Welcome Back Check-in -->
+                <div class="onboarding-step" data-step="6" id="welcome-back-step">
+                    <div class="onboarding-icon">
+                        <i data-lucide="flame" class="streak-flame-icon icon-pulse"></i>
+                    </div>
+                    <h2>Welcome Back to AuraStudy</h2>
+                    <p id="welcome-back-message">Ready to build on your consistency today?</p>
+                    
+                    <div class="welcome-back-stats">
+                        <div class="back-stat-card">
+                            <span class="back-stat-label">Current Streak</span>
+                            <span class="back-stat-val" id="back-streak-count">0 Days</span>
+                        </div>
+                        <div class="back-stat-card">
+                            <span class="back-stat-label">Daily Focus Goal</span>
+                            <span class="back-stat-val" id="back-goal-mins">60 Mins</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-next btn-primary" onclick="closeWelcomeBack()">Enter Study Space <i data-lucide="log-in"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal (Tab-based Panel) -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-card settings-card scale-in">
+            <div class="settings-modal-header">
+                <h3><i data-lucide="settings"></i> Workspace Settings</h3>
+                <button class="close-settings-btn" onclick="toggleSettingsModal()"><i data-lucide="x"></i></button>
+            </div>
+            
+            <div class="settings-body">
+                <!-- Settings Tabs -->
+                <div class="settings-tabs">
+                    <button class="settings-tab-btn active" id="settings-tab-btn-layout" onclick="switchSettingsTab('layout')">📁 Layout</button>
+                    <button class="settings-tab-btn" id="settings-tab-btn-vibe" onclick="switchSettingsTab('vibe')">🎨 Vibe & Backdrop</button>
+                    <button class="settings-tab-btn" id="settings-tab-btn-timers" onclick="switchSettingsTab('timers')">⏲️ Goals & Timers</button>
+                    <button class="settings-tab-btn" id="settings-tab-btn-audio" onclick="switchSettingsTab('audio')">🔊 Alarm Sounds</button>
+                </div>
+                
+                <!-- Settings Tab Contents -->
+                <!-- Tab 1: Layout -->
+                <div class="settings-tab-content active" id="settings-tab-content-layout">
+                    <h4>Bento Modules Visibility</h4>
+                    <p class="settings-desc">Choose which modules are active on your bento workspace grid.</p>
+                    <div class="widget-toggle-list">
+                        <label class="toggle-switch-container">
+                            <input type="checkbox" id="toggle-pomodoro" checked onchange="toggleWidgetVisibility('widget-pomodoro')">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Pomodoro Workspace</span>
+                        </label>
+                        <label class="toggle-switch-container">
+                            <input type="checkbox" id="toggle-stopwatch" checked onchange="toggleWidgetVisibility('widget-stopwatch')">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Session Stopwatch</span>
+                        </label>
+                        <label class="toggle-switch-container">
+                            <input type="checkbox" id="toggle-clocks" checked onchange="toggleWidgetVisibility('widget-clocks')">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Clock Station</span>
+                        </label>
+                        <label class="toggle-switch-container">
+                            <input type="checkbox" id="toggle-tracker" checked onchange="toggleWidgetVisibility('widget-tracker')">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Study Logger & Logs</span>
+                        </label>
+                        <label class="toggle-switch-container">
+                            <input type="checkbox" id="toggle-streak" checked onchange="toggleWidgetVisibility('widget-streak')">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Daily Streaks Card</span>
+                        </label>
+                        <label class="toggle-switch-container">
+                            <input type="checkbox" id="toggle-analytics" checked onchange="toggleWidgetVisibility('widget-analytics')">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Focus Analytics Graphs</span>
+                        </label>
+                        <label class="toggle-switch-container">
+                            <input type="checkbox" id="toggle-music" checked onchange="toggleWidgetVisibility('widget-music')">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Audio & Ambient Mixer</span>
+                        </label>
+                    </div>
+
+                    <h4 class="mt-20">Edit Homescreen Layout</h4>
+                    <p class="settings-desc">Rearrange your bento grids or restore them to standard default layout positions.</p>
+                    <div class="settings-layout-controls">
+                        <button class="btn btn-sm btn-primary" onclick="toggleSettingsModal(); toggleLayoutDrawer();">
+                            <i data-lucide="pencil"></i> Customize Layout Drawer
+                        </button>
+                        <button class="btn btn-sm" onclick="resetWidgetLayout()">
+                            <i data-lucide="rotate-ccw"></i> Reset Layout Order
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tab 2: Vibe & Video -->
+                <div class="settings-tab-content" id="settings-tab-content-vibe">
+                    <h4>Workspace Themes</h4>
+                    <p class="settings-desc">Choose a design palette matching your aesthetic preference.</p>
+                    <div class="theme-grid-options">
+                        <button class="theme-btn-opt" onclick="setTheme('aesthetic')"><span class="color-dot cozy-dot"></span> Cozy Aesthetic</button>
+                        <button class="theme-btn-opt" onclick="setTheme('minimalist')"><span class="color-dot minimal-dot"></span> Minimalist</button>
+                        <button class="theme-btn-opt" onclick="setTheme('cyberpunk')"><span class="color-dot cyber-dot"></span> Cyberpunk</button>
+                        <button class="theme-btn-opt" onclick="setTheme('anime')"><span class="color-dot anime-dot"></span> Cute Anime</button>
+                        <button class="theme-btn-opt" onclick="setTheme('watercolour')"><span class="color-dot water-dot"></span> Watercolour</button>
+                    </div>
+                    
+                    <h4 class="mt-20">Aesthetic Photo Backdrops</h4>
+                    <p class="settings-desc">Select an animated looping ambient background image to study in.</p>
+                    <div class="video-bg-options">
+                        <button class="video-opt-btn" id="video-opt-none" data-bg="none" onclick="setBackgroundImage('none')">
+                            <i data-lucide="image"></i> None (Gradients)
+                        </button>
+                        <button class="video-opt-btn" id="video-opt-lofi" data-bg="lofi" onclick="setBackgroundImage('lofi')">
+                            <i data-lucide="music-4"></i> Lofi Girl
+                        </button>
+                        <button class="video-opt-btn" id="video-opt-cafe" data-bg="cafe" onclick="setBackgroundImage('cafe')">
+                            <i data-lucide="coffee"></i> Rainy Cafe
+                        </button>
+                        <button class="video-opt-btn" id="video-opt-fireplace" data-bg="fireplace" onclick="setBackgroundImage('fireplace')">
+                            <i data-lucide="flame"></i> Cozy Fireplace
+                        </button>
+                        <button class="video-opt-btn" id="video-opt-cyberpunk" data-bg="cyberpunk" onclick="setBackgroundImage('cyberpunk')">
+                            <i data-lucide="terminal"></i> Cyberpunk Rain
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tab 3: Goals & Timers -->
+                <div class="settings-tab-content" id="settings-tab-content-timers">
+                    <h4>Daily Target Study Time</h4>
+                    <p class="settings-desc">Set the target focus time required to preserve and boost your daily streak.</p>
+                    <div class="goal-input-container">
+                        <input type="number" id="daily-goal-input-settings" min="1" max="1440" value="60">
+                        <span>Minutes / Day</span>
+                    </div>
+                    
+                    <h4 class="mt-20">Adjust Pomodoro Intervals (minutes)</h4>
+                    <div class="settings-inputs">
+                        <div class="input-field">
+                            <label>Focus</label>
+                            <input type="number" id="settings-pomo-focus" value="25" min="1" max="180">
+                        </div>
+                        <div class="input-field">
+                            <label>Short Rest</label>
+                            <input type="number" id="settings-pomo-short" value="5" min="1" max="60">
+                        </div>
+                        <div class="input-field">
+                            <label>Long Rest</label>
+                            <input type="number" id="settings-pomo-long" value="15" min="1" max="120">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tab 4: Alarm Sounds -->
+                <div class="settings-tab-content" id="settings-tab-content-audio">
+                    <h4>Timer Alarm Sounds</h4>
+                    <p class="settings-desc">Select the audio alert triggered upon timer completion.</p>
+                    <div class="sound-select-options">
+                        <button class="sound-opt-btn" id="sound-opt-aesthetic" onclick="selectAlertSound('aesthetic')">
+                            <i data-lucide="bell"></i> Meditation Bowl (Cozy)
+                        </button>
+                        <button class="sound-opt-btn" id="sound-opt-cyberpunk" onclick="selectAlertSound('cyberpunk')">
+                            <i data-lucide="zap"></i> Cyber Synth Alert
+                        </button>
+                        <button class="sound-opt-btn" id="sound-opt-anime" onclick="selectAlertSound('anime')">
+                            <i data-lucide="play-circle"></i> Bouncy Beep (Anime)
+                        </button>
+                        <button class="sound-opt-btn" id="sound-opt-minimalist" onclick="selectAlertSound('minimalist')">
+                            <i data-lucide="activity"></i> Double Tick (Minimalist)
+                        </button>
+                    </div>
+                    <button class="btn btn-sm btn-primary mt-15" onclick="testSelectedAlertSound()">🔊 Test Selected Alarm</button>
+                    
+                    <div class="danger-zone mt-20">
+                        <h4>Reset All Data</h4>
+                        <p class="settings-desc text-danger">Warning: This clears all study logs, custom goals, and streaks permanently.</p>
+                        <button class="btn btn-sm btn-danger btn-full mt-10" onclick="resetApp()">Reset Workspace Data</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-footer">
+                <button class="btn btn-primary" onclick="saveAllSettings()">Save & Apply Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="app-header">
+        <div class="header-logo">
+            <i data-lucide="sparkles" class="logo-sparkle"></i>
+            <h1>AuraStudy</h1>
+        </div>
+        
+        <!-- Daily Motivational Quote -->
+        <div class="header-quote" id="header-motivational-quote">
+            <!-- Quote injected via JS -->
+        </div>
+
+        <!-- Live widgets inside header (Time & Date, Streak) -->
+        <div class="header-widgets">
+            <!-- Streak Indicator -->
+            <div class="header-streak-badge" id="streak-badge" title="Your consecutive study streak! Complete your daily focus goal to keep it alive.">
+                <i data-lucide="flame" class="streak-flame-icon"></i>
+                <span class="streak-text"><span id="header-streak-count">0</span> Day Streak</span>
+            </div>
+
+            <!-- Global Time Widget -->
+            <div class="header-clock" id="header-clock-widget">
+                <span id="header-time-display">00:00:00</span>
+                <span id="header-ampm-display"></span>
+            </div>
+
+            <!-- Theme Quick Select -->
+            <div class="theme-dropdown-container">
+                <button class="theme-dropdown-btn" onclick="toggleThemeDropdown()" id="theme-btn">
+                    <i data-lucide="palette"></i> <span id="active-theme-label">Cozy</span>
+                </button>
+                <div class="theme-dropdown-menu" id="theme-menu">
+                    <button class="theme-opt" onclick="setTheme('aesthetic')"><span class="color-dot cozy-dot"></span> Cozy Aesthetic</button>
+                    <button class="theme-opt" onclick="setTheme('minimalist')"><span class="color-dot minimal-dot"></span> Minimalist</button>
+                    <button class="theme-opt" onclick="setTheme('cyberpunk')"><span class="color-dot cyber-dot"></span> Cyberpunk</button>
+                    <button class="theme-opt" onclick="setTheme('anime')"><span class="color-dot anime-dot"></span> Cute Anime</button>
+                    <button class="theme-opt" onclick="setTheme('watercolour')"><span class="color-dot water-dot"></span> Watercolour</button>
+                </div>
+            </div>
+
+            <!-- Backdrop Quick Select -->
+            <div class="theme-dropdown-container">
+                <button class="theme-dropdown-btn" onclick="toggleBackdropDropdown()" id="backdrop-btn">
+                    <i data-lucide="image"></i> <span id="active-backdrop-label">None</span>
+                </button>
+                <div class="theme-dropdown-menu" id="backdrop-menu">
+                    <button class="theme-opt video-opt-btn" data-bg="none" onclick="setBackgroundImage('none')"><i data-lucide="image"></i> None</button>
+                    <button class="theme-opt video-opt-btn" data-bg="lofi" onclick="setBackgroundImage('lofi')"><i data-lucide="music-4"></i> Lofi Girl</button>
+                    <button class="theme-opt video-opt-btn" data-bg="cafe" onclick="setBackgroundImage('cafe')"><i data-lucide="coffee"></i> Rainy Cafe</button>
+                    <button class="theme-opt video-opt-btn" data-bg="fireplace" onclick="setBackgroundImage('fireplace')"><i data-lucide="flame"></i> Cozy Fireplace</button>
+                    <button class="theme-opt video-opt-btn" data-bg="cyberpunk" onclick="setBackgroundImage('cyberpunk')"><i data-lucide="terminal"></i> Cyberpunk Rain</button>
+                </div>
+            </div>
+            
+            <!-- Edit Mode Trigger Pencil -->
+            <button class="icon-btn" id="edit-mode-btn" onclick="toggleLayoutDrawer()" title="Customize Homescreen Layout">
+                <i data-lucide="pencil"></i>
+            </button>
+
+            <!-- Settings Modal Trigger Button -->
+            <button class="icon-btn" onclick="toggleSettingsModal()" title="Configure Workspace Settings">
+                <i data-lucide="settings"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Dashboard Grid (Bento Layout) -->
+    <main class="dashboard-grid" id="main-grid">
+
+        <!-- Widget 1: Pomodoro Timer -->
+        <section id="widget-pomodoro" class="dashboard-widget pomodoro-widget">
+            <button class="widget-delete-btn" onclick="deleteWidget(event, 'widget-pomodoro')" title="Hide Widget"><i data-lucide="minus"></i></button>
+            <div class="widget-drag-handle" title="Drag to reorder"><i data-lucide="grip-vertical"></i></div>
+            
+            <div class="widget-header">
+                <h3><i data-lucide="timer"></i> Pomodoro Workspace</h3>
+                <div class="pomodoro-modes">
+                    <button class="mode-btn active" id="pomo-mode-focus" onclick="setPomodoroMode('focus')">Focus</button>
+                    <button class="mode-btn" id="pomo-mode-short" onclick="setPomodoroMode('short-break')">Short Break</button>
+                    <button class="mode-btn" id="pomo-mode-long" onclick="setPomodoroMode('long-break')">Long Break</button>
+                </div>
+            </div>
+            
+            <div class="widget-body flex-col align-center">
+                <!-- Visual progress indicator -->
+                <div class="timer-progress-container">
+                    <svg class="progress-ring" width="220" height="220">
+                        <circle class="progress-ring-circle-bg" stroke-width="8" fill="transparent" r="100" cx="110" cy="110"/>
+                        <circle class="progress-ring-circle" id="pomodoro-progress" stroke-width="8" fill="transparent" r="100" cx="110" cy="110"/>
+                    </svg>
+                    <div class="timer-display">
+                        <span id="pomo-time">25:00</span>
+                        <span id="pomo-status-label">Time to focus!</span>
+                    </div>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="btn-control play" id="pomo-play-btn" onclick="togglePomodoro()">
+                        <i data-lucide="play" id="pomo-play-icon"></i>
+                    </button>
+                    <button class="btn-control reset" onclick="resetPomodoro()">
+                        <i data-lucide="rotate-ccw"></i>
+                    </button>
+                    <button class="btn-control settings" onclick="togglePomoSettings()">
+                        <i data-lucide="settings"></i>
+                    </button>
+                </div>
+
+                <!-- Custom Time Settings Dropdown -->
+                <div class="pomodoro-settings-panel" id="pomo-settings">
+                    <h4>Adjust Session Durations (minutes)</h4>
+                    <div class="settings-inputs">
+                        <div class="input-field">
+                            <label>Focus</label>
+                            <input type="number" id="input-focus" value="25" min="1" max="180">
+                        </div>
+                        <div class="input-field">
+                            <label>Short Break</label>
+                            <input type="number" id="input-short-break" value="5" min="1" max="60">
+                        </div>
+                        <div class="input-field">
+                            <label>Long Break</label>
+                            <input type="number" id="input-long-break" value="15" min="1" max="120">
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="savePomodoroSettings()">Apply Changes</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Widget 2: Stopwatch -->
+        <section id="widget-stopwatch" class="dashboard-widget stopwatch-widget">
+            <button class="widget-delete-btn" onclick="deleteWidget(event, 'widget-stopwatch')" title="Hide Widget"><i data-lucide="minus"></i></button>
+            <div class="widget-drag-handle" title="Drag to reorder"><i data-lucide="grip-vertical"></i></div>
+
+            <div class="widget-header">
+                <h3><i data-lucide="hourglass"></i> Session Stopwatch</h3>
+            </div>
+            <div class="widget-body flex-col align-center">
+                <div class="stopwatch-display" id="stopwatch-time">00:00:00<span class="milliseconds">.00</span></div>
+                
+                <div class="timer-controls">
+                    <button class="btn-control play" id="stopwatch-play-btn" onclick="toggleStopwatch()">
+                        <i data-lucide="play" id="stopwatch-play-icon"></i>
+                    </button>
+                    <button class="btn-control split" id="stopwatch-lap-btn" onclick="lapStopwatch()" disabled>
+                        <i data-lucide="flag"></i>
+                    </button>
+                    <button class="btn-control reset" onclick="resetStopwatch()">
+                        <i data-lucide="rotate-ccw"></i>
+                    </button>
+                </div>
+
+                <div class="laps-container" id="stopwatch-laps" style="display: none;">
+                    <h5>Splits & Laps</h5>
+                    <ul class="laps-list" id="laps-list-ul">
+                        <!-- Lap entries inserted dynamically -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Widget 3: Aesthetic Clocks -->
+        <section id="widget-clocks" class="dashboard-widget clocks-widget">
+            <button class="widget-delete-btn" onclick="deleteWidget(event, 'widget-clocks')" title="Hide Widget"><i data-lucide="minus"></i></button>
+            <div class="widget-drag-handle" title="Drag to reorder"><i data-lucide="grip-vertical"></i></div>
+
+            <div class="widget-header">
+                <h3><i data-lucide="clock"></i> Clock Station</h3>
+                <div class="clock-toggles">
+                    <button class="btn btn-sm active" id="clock-mode-digital" onclick="setClockDisplayMode('digital')">Digital</button>
+                    <button class="btn btn-sm" id="clock-mode-analog" onclick="setClockDisplayMode('analog')">Analog</button>
+                    <button class="btn btn-sm" id="clock-format-toggle" onclick="toggleClockFormat()">12-Hour</button>
+                </div>
+            </div>
+            <div class="widget-body flex-col align-center justify-center">
+                
+                <!-- Digital Clock Display -->
+                <div id="digital-clock-display" class="large-clock-face">
+                    <div class="digital-time" id="digital-clock-time">12:34</div>
+                    <div class="digital-seconds-ampm">
+                        <span id="digital-clock-seconds">56</span>
+                        <span id="digital-clock-ampm">PM</span>
+                    </div>
+                </div>
+
+                <!-- Analog Clock Display -->
+                <div id="analog-clock-display" class="analog-clock-face" style="display: none;">
+                    <div class="clock-pin"></div>
+                    <div class="hand hour-hand" id="analog-hour"></div>
+                    <div class="hand minute-hand" id="analog-minute"></div>
+                    <div class="hand second-hand" id="analog-second"></div>
+                    <div class="analog-numbers">
+                        <span class="num num-12">12</span>
+                        <span class="num num-3">3</span>
+                        <span class="num num-6">6</span>
+                        <span class="num num-9">9</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Widget 4: Session Tracker & Log -->
+        <section id="widget-tracker" class="dashboard-widget tracker-widget">
+            <button class="widget-delete-btn" onclick="deleteWidget(event, 'widget-tracker')" title="Hide Widget"><i data-lucide="minus"></i></button>
+            <div class="widget-drag-handle" title="Drag to reorder"><i data-lucide="grip-vertical"></i></div>
+
+            <div class="widget-header">
+                <h3><i data-lucide="clipboard-list"></i> To-Do & Logger</h3>
+                <div class="tracker-tabs" style="display: flex; gap: 6px;">
+                    <button class="btn btn-sm active" id="tracker-tab-todo" onclick="setTrackerTab('todo')">To-Do</button>
+                    <button class="btn btn-sm" id="tracker-tab-log" onclick="setTrackerTab('log')">Log History</button>
+                </div>
+            </div>
+            <div class="widget-body">
+                <!-- Tab Content 1: To-Do List -->
+                <div id="tracker-content-todo">
+                    <div class="session-form" style="margin-bottom: 12px;">
+                        <div class="input-group" style="display: flex; gap: 6px; width: 100%;">
+                            <input type="text" id="todo-text" placeholder="Add a study task..." style="flex-grow: 1;">
+                            <input type="number" id="todo-duration" placeholder="Mins" min="1" max="600" style="width: 70px;">
+                            <button class="btn btn-primary" onclick="addTodoItem()"><i data-lucide="plus"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="todo-list-container" style="max-height: 180px; overflow-y: auto; margin-bottom: 15px;">
+                        <ul id="todo-list-ul" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Todo items rendered dynamically -->
+                        </ul>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="start-todo-session-btn" onclick="startTodoSession()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i data-lucide="play-circle"></i> Start Selected Task Session
+                    </button>
+                </div>
+
+                <!-- Tab Content 2: Log History -->
+                <div id="tracker-content-log" style="display: none;">
+                    <div class="session-form" style="margin-bottom: 15px;">
+                        <div class="input-group">
+                            <input type="text" id="session-subject" placeholder="What are you studying? (e.g. Math)">
+                            <input type="number" id="session-duration" placeholder="Mins" min="1" max="600">
+                            <button class="btn btn-primary" onclick="manualLogSession()"><i data-lucide="plus"></i> Log</button>
+                        </div>
+                    </div>
+
+                    <div class="recent-sessions">
+                        <h4>Logged Sessions Today</h4>
+                        <div class="session-scroll-list" id="session-history-list">
+                            <!-- History elements inserted dynamically -->
+                            <div class="empty-state">
+                                <i data-lucide="coffee"></i>
+                                <span>No study sessions logged today. Time to start!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Widget 5: Gamified Streaks -->
+        <section id="widget-streak" class="dashboard-widget streak-widget">
+            <button class="widget-delete-btn" onclick="deleteWidget(event, 'widget-streak')" title="Hide Widget"><i data-lucide="minus"></i></button>
+            <div class="widget-drag-handle" title="Drag to reorder"><i data-lucide="grip-vertical"></i></div>
+
+            <div class="widget-header">
+                <h3><i data-lucide="award"></i> Gamified Streaks</h3>
+            </div>
+            <div class="widget-body flex-col align-center">
+                <!-- Aura Level & XP Progress Bar -->
+                <div class="aura-level-container" style="display: flex; flex-direction: column; width: 100%; gap: 6px; margin-bottom: 12px; margin-top: 5px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700;">
+                        <span>Aura Level <span id="aura-level-val">1</span></span>
+                        <span id="aura-xp-val" style="color: var(--primary);">0 / 100 XP</span>
+                    </div>
+                    <div class="progress-bar-container" style="height: 8px;">
+                        <div class="progress-bar-fill" id="aura-xp-bar" style="width: 0%; background-color: var(--primary); transition: width 0.4s ease;"></div>
+                    </div>
+                </div>
+
+                <!-- Aura Flora Sprout Display -->
+                <div class="aura-flora-card" style="width: 100%; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.04); border: var(--border-thickness) var(--border-style) var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 12px; position: relative;">
+                    <div id="aura-flora-svg-container" style="width: 120px; height: 110px; display: flex; align-items: center; justify-content: center; position: relative;">
+                        <!-- Flora SVG injected dynamically -->
+                    </div>
+                    <div id="flora-status-text" style="font-family: var(--font-heading); font-size: 0.82rem; font-weight: bold; margin-top: 6px; color: var(--text-main);">Sprout sleeping...</div>
+                </div>
+
+                <!-- Streak & Journal buttons -->
+                <div style="display: flex; width: 100%; gap: 10px; margin-bottom: 15px;">
+                    <div class="streak-giant-card" style="flex: 1.1; padding: 10px; margin: 0; min-height: unset; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; border-radius: 12px;">
+                        <i data-lucide="flame" class="streak-giant-flame" style="width: 24px; height: 24px;"></i>
+                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <span class="streak-giant-number" id="streak-giant-count" style="font-size: 1.3rem; line-height: 1;">0</span>
+                            <span style="font-size: 0.65rem; color: var(--text-muted);">Day Streak</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline" onclick="toggleGardenJournal()" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 12px; flex: 0.9; font-weight: bold; font-size: 0.8rem;">
+                        <i data-lucide="book-open" style="width: 14px; height: 14px;"></i> Journal
+                    </button>
+                </div>
+                
+                <!-- Garden Journal list -->
+                <div id="garden-journal-drawer" style="display: none; width: 100%; border-top: 1px dashed var(--border-color); margin-top: 5px; margin-bottom: 15px; padding-top: 10px;">
+                    <h5 style="margin-bottom: 8px; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Bloomed Garden</h5>
+                    <div id="garden-journal-list" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.72rem;">
+                        <span style="color: var(--text-muted); font-style: italic;">No plants in journal yet. Complete a study session to grow!</span>
+                    </div>
+                </div>
+
+                <!-- Daily status indicator -->
+                <div class="daily-progress-tracker">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="daily-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="daily-progress-text">
+                        Today: <span id="daily-focus-mins">0</span> / <span id="daily-goal-mins">60</span> minutes focused
+                    </div>
+                </div>
+
+                <!-- Week view checklist -->
+                <div class="week-checklist" id="week-checklist-container">
+                    <!-- Days of week generated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Widget 6: Progress Graphs -->
+        <section id="widget-analytics" class="dashboard-widget analytics-widget">
+            <button class="widget-delete-btn" onclick="deleteWidget(event, 'widget-analytics')" title="Hide Widget"><i data-lucide="minus"></i></button>
+            <div class="widget-drag-handle" title="Drag to reorder"><i data-lucide="grip-vertical"></i></div>
+
+            <div class="widget-header">
+                <h3><i data-lucide="bar-chart-2"></i> Focus Analytics</h3>
+                <div class="analytics-toggles">
+                    <button class="btn btn-sm active" id="chart-range-week" onclick="setChartRange('week')">Week</button>
+                    <button class="btn btn-sm" id="chart-range-month" onclick="setChartRange('month')">Month</button>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="stats-overview">
+                    <div class="stat-card">
+                        <span class="stat-title">Total Studied</span>
+                        <span class="stat-value" id="stats-total-hours">0h 0m</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-title">Daily Average</span>
+                        <span class="stat-value" id="stats-daily-avg">0m</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-title">Sessions Logged</span>
+                        <span class="stat-value" id="stats-session-count">0</span>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Widget 7: Music Integration & Ambient Sound Mixer -->
+        <section id="widget-music" class="dashboard-widget music-widget">
+            <button class="widget-delete-btn" onclick="deleteWidget(event, 'widget-music')" title="Hide Widget"><i data-lucide="minus"></i></button>
+            <div class="widget-drag-handle" title="Drag to reorder"><i data-lucide="grip-vertical"></i></div>
+
+            <div class="widget-header">
+                <h3><i data-lucide="music"></i> Audio Workspace</h3>
+                <div class="music-header-controls">
+                    <button class="btn-minimize-toggle" id="music-collapse-btn" onclick="toggleMusicCollapse()" title="Collapse Embed to Player">
+                        <i data-lucide="minimize-2" id="music-collapse-icon"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="widget-body">
+                <!-- Standard Embed Tabs & Mixers (Hidden when collapsed) -->
+                <div id="expanded-media-player">
+                    <div class="music-tabs">
+                        <button class="tab-btn active" id="music-tab-btn-ambient" onclick="setMusicTab('ambient')">Ambient Mixer</button>
+                        <button class="tab-btn" id="music-tab-btn-spotify" onclick="setMusicTab('spotify')">Spotify</button>
+                        <button class="tab-btn" id="music-tab-btn-soundcloud" onclick="setMusicTab('soundcloud')">SoundCloud</button>
+                        <button class="tab-btn" id="music-tab-btn-youtube" onclick="setMusicTab('youtube')">YT Music</button>
+                    </div>
+
+                    <!-- Ambient sound mixer tab -->
+                    <div id="music-tab-content-ambient" class="music-tab-content active">
+                        <div class="ambient-mixer-grid">
+                            <div class="ambient-control-card">
+                                <span class="ambient-label"><i data-lucide="cloud-rain"></i> Ambient Rain</span>
+                                <div class="slider-row">
+                                    <input type="range" class="ambient-slider" id="ambient-rain" min="0" max="1" step="0.05" value="0" oninput="adjustAmbientVolume('rain', this.value)">
+                                    <button class="btn-audio-mute" id="mute-rain" onclick="toggleAmbientSound('rain')"><i data-lucide="volume-x"></i></button>
+                                </div>
+                            </div>
+                            <div class="ambient-control-card">
+                                <span class="ambient-label"><i data-lucide="flame"></i> Fireplace</span>
+                                <div class="slider-row">
+                                    <input type="range" class="ambient-slider" id="ambient-fireplace1" min="0" max="1" step="0.05" value="0" oninput="adjustAmbientVolume('fireplace1', this.value)">
+                                    <button class="btn-audio-mute" id="mute-fireplace1" onclick="toggleAmbientSound('fireplace1')"><i data-lucide="volume-x"></i></button>
+                                </div>
+                            </div>
+                            <div class="ambient-control-card">
+                                <span class="ambient-label"><i data-lucide="music-3"></i> Fireplace 2</span>
+                                <div class="slider-row">
+                                    <input type="range" class="ambient-slider" id="ambient-fireplace2" min="0" max="1" step="0.05" value="0" oninput="adjustAmbientVolume('fireplace2', this.value)">
+                                    <button class="btn-audio-mute" id="mute-fireplace2" onclick="toggleAmbientSound('fireplace2')"><i data-lucide="volume-x"></i></button>
+                                </div>
+                            </div>
+                            <div class="ambient-control-card">
+                                <span class="ambient-label"><i data-lucide="music"></i> Rainy Town</span>
+                                <div class="slider-row">
+                                    <input type="range" class="ambient-slider" id="ambient-rainy_town" min="0" max="1" step="0.05" value="0" oninput="adjustAmbientVolume('rainy_town', this.value)">
+                                    <button class="btn-audio-mute" id="mute-rainy_town" onclick="toggleAmbientSound('rainy_town')"><i data-lucide="volume-x"></i></button>
+                                </div>
+                            </div>
+                            <!-- Procedural Ambient Synth Card -->
+                            <div class="ambient-control-card" style="grid-column: span 2; border-color: var(--primary); background: rgba(255,255,255,0.06); padding: 12px 14px;">
+                                <span class="ambient-label" style="color: var(--primary); font-weight: bold; display: flex; align-items: center; gap: 6px;"><i data-lucide="sparkles"></i> Generative Flow Synth</span>
+                                <div class="slider-row">
+                                    <input type="range" class="ambient-slider" id="ambient-synth" min="0" max="1" step="0.05" value="0" oninput="adjustSynthVolume(this.value)">
+                                    <button class="btn-audio-mute" id="mute-synth" onclick="toggleSynthSound()"><i data-lucide="volume-x"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spotify embed tab -->
+                    <div id="music-tab-content-spotify" class="music-tab-content">
+                        <iframe id="spotify-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZF1DWWQRwui0ExPn?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                        <div class="playlist-suggestion">
+                            <span class="label">Playlist Link:</span>
+                            <input type="text" id="spotify-playlist-url" placeholder="Paste Spotify Playlist URL" class="input-sm">
+                            <button class="btn btn-sm btn-primary" onclick="loadSpotifyPlaylist()">Load</button>
+                        </div>
+                    </div>
+
+                    <!-- SoundCloud embed tab -->
+                    <div id="music-tab-content-soundcloud" class="music-tab-content">
+                        <iframe id="soundcloud-iframe" width="100%" height="152" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/412952865&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>
+                        <div class="playlist-suggestion">
+                            <span class="label">SoundCloud URL:</span>
+                            <input type="text" id="soundcloud-playlist-url" placeholder="Paste SoundCloud playlist link" class="input-sm">
+                            <button class="btn btn-sm btn-primary" onclick="loadSoundCloudPlaylist()">Load</button>
+                        </div>
+                    </div>
+
+                    <!-- YouTube embed tab -->
+                    <div id="music-tab-content-youtube" class="music-tab-content">
+                        <div class="iframe-container">
+                            <iframe id="youtube-iframe" width="100%" height="152" src="https://www.youtube.com/embed/jfKfPfyJRdk?enablejsapi=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                        <div class="playlist-suggestion">
+                            <span class="label">YouTube Video ID/URL:</span>
+                            <input type="text" id="youtube-url" placeholder="Paste YouTube link" class="input-sm">
+                            <button class="btn btn-sm btn-primary" onclick="loadYoutubeVideo()">Load</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+    </main>
+
+    <!-- Hidden Widget Notification Modal -->
+    <div id="hidden-widget-modal" class="modal-overlay">
+        <div class="modal-card scale-in" style="max-width: 400px; padding: 30px;">
+            <div class="modal-info-step">
+                <div class="onboarding-icon" style="background-color: var(--bg-app); margin-bottom: 15px;">
+                    <i data-lucide="info" style="color: var(--primary); width: 32px; height: 32px;"></i>
+                </div>
+                <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin-bottom: 10px;">Widget Hidden</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px;">
+                    You have hidden a widget. Don't worry! You can easily re-enable it or reset the entire layout from <strong>Workspace Settings &rarr; Layout</strong> at any time.
+                </p>
+                <button class="btn btn-primary" onclick="closeModal('hidden-widget-modal')" style="width: 100%;">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout Customizer Drawer -->
+    <div id="layout-drawer" class="layout-drawer">
+        <div class="drawer-header">
+            <h3><i data-lucide="layout"></i> Customize Layout</h3>
+            <button class="btn-close-drawer" onclick="toggleLayoutDrawer()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="drawer-body">
+            <p class="drawer-desc">Drag and drop items to reorder your homescreen. Toggle checkboxes to show/hide widgets.</p>
+            <ul id="edit-layout-list" class="edit-layout-list">
+                <!-- Items populated dynamically -->
+            </ul>
+            <button class="btn btn-primary" onclick="resetWidgetLayout()" style="width: 100%; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i data-lucide="rotate-ccw"></i> Reset Layout Order
+            </button>
+        </div>
+    </div>
+
+    <!-- Main JS script -->
+    <script src="app.js"></script>
+</body>
+</html>
