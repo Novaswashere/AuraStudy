@@ -687,7 +687,7 @@
                     <div class="session-form" style="margin-bottom: 12px;">
                         <div class="input-group" style="display: flex; gap: 6px; width: 100%;">
                             <input type="text" id="todo-text" placeholder="Add a study task..." style="flex-grow: 1;">
-                            <input type="number" id="todo-duration" placeholder="Mins" min="1" max="600" style="width: 70px;">
+                            <input type="number" id="todo-duration" placeholder="Mins" min="1" max="600" style="width: 90px; font-size: 0.95rem; font-weight: bold; text-align: center;">
                             <button class="btn btn-primary" onclick="addTodoItem()"><i data-lucide="plus"></i></button>
                         </div>
                     </div>
@@ -753,9 +753,20 @@
                         <!-- Flora SVG injected dynamically -->
                     </div>
                     <div id="flora-status-text" style="font-family: var(--font-heading); font-size: 0.82rem; font-weight: bold; margin-top: 6px; color: var(--text-main);">Sprout sleeping...</div>
+                    
+                    <!-- Cumulative Active Plant progress bar -->
+                    <div class="active-plant-progress-container" style="width: 100%; display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
+                            <span>Active Sprout Progress</span>
+                            <span id="active-plant-growth-val">0%</span>
+                        </div>
+                        <div class="progress-bar-container" style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; border: 1px solid var(--border-color);">
+                            <div class="progress-bar-fill" id="active-plant-growth-bar" style="width: 0%; background-color: #22c55e; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Streak & Journal buttons -->
+                <!-- Streak & Garden buttons -->
                 <div style="display: flex; width: 100%; gap: 10px; margin-bottom: 15px;">
                     <div class="streak-giant-card" style="flex: 1.1; padding: 10px; margin: 0; min-height: unset; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 8px; border-radius: 12px;">
                         <i data-lucide="flame" class="streak-giant-flame" style="width: 24px; height: 24px;"></i>
@@ -764,17 +775,9 @@
                             <span style="font-size: 0.65rem; color: var(--text-muted);">Day Streak</span>
                         </div>
                     </div>
-                    <button class="btn btn-sm btn-outline" onclick="toggleGardenJournal()" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 12px; flex: 0.9; font-weight: bold; font-size: 0.8rem;">
-                        <i data-lucide="book-open" style="width: 14px; height: 14px;"></i> Journal
+                    <button class="btn btn-sm btn-outline" onclick="openModal('garden-modal')" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 12px; flex: 0.9; font-weight: bold; font-size: 0.8rem;">
+                        <i data-lucide="sprout" style="width: 14px; height: 14px; color: #22c55e;"></i> My Garden
                     </button>
-                </div>
-                
-                <!-- Garden Journal list -->
-                <div id="garden-journal-drawer" style="display: none; width: 100%; border-top: 1px dashed var(--border-color); margin-top: 5px; margin-bottom: 15px; padding-top: 10px;">
-                    <h5 style="margin-bottom: 8px; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Bloomed Garden</h5>
-                    <div id="garden-journal-list" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.72rem;">
-                        <span style="color: var(--text-muted); font-style: italic;">No plants in journal yet. Complete a study session to grow!</span>
-                    </div>
                 </div>
 
                 <!-- Daily status indicator -->
@@ -943,6 +946,52 @@
                     You have hidden a widget. Don't worry! You can easily re-enable it or reset the entire layout from <strong>Workspace Settings &rarr; Layout</strong> at any time.
                 </p>
                 <button class="btn btn-primary" onclick="closeModal('hidden-widget-modal')" style="width: 100%;">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Focus Garden Modal -->
+    <div id="garden-modal" class="modal-overlay">
+        <div class="modal-card scale-in" style="max-width: 680px; width: 90%; padding: 0; overflow: hidden; background: var(--bg-card); border: var(--border-thickness) var(--border-style) var(--border-color);">
+            <div class="modal-header" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color);">
+                <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin: 0;">
+                    <i data-lucide="sprout" style="color: #22c55e;"></i> My Virtual Focus Garden
+                </h3>
+                <button class="btn-close-drawer" onclick="closeModal('garden-modal')" style="background: none; border: none; cursor: pointer; color: var(--text-main); font-size: 1.2rem; display: flex; align-items: center;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 20px; max-height: 80vh; overflow-y: auto;">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; margin-top: 0; line-height: 1.45;">
+                    Every 60 minutes of study or checked-off tasks fully matures your active plant! Once maxed out, your plant is permanently potted below to grow your digital sanctuary.
+                </p>
+                
+                <!-- The Visual Illustrated Garden Container -->
+                <div class="visual-garden-wrapper" style="width: 100%; border-radius: 12px; border: var(--border-thickness) var(--border-style) var(--border-color); overflow: hidden; position: relative;">
+                    <!-- Grassy/Sky Backdrop -->
+                    <div class="garden-scenery" style="height: 380px; width: 100%; background: linear-gradient(to bottom, #dbeafe 0%, #bfdbfe 40%, #86efac 40%, #22c55e 100%); position: relative; overflow: hidden;">
+                        <!-- Static Trees and Birdhouse decor -->
+                        <div class="garden-decor-tree" style="position: absolute; bottom: 80px; left: 20px; width: 80px; height: 160px; background: #166534; border-radius: 40px 40px 0 0; opacity: 0.85;">
+                            <!-- Trunk -->
+                            <div style="position: absolute; bottom: -80px; left: 32px; width: 16px; height: 80px; background: #78350f;"></div>
+                        </div>
+                        <div class="garden-decor-fence" style="position: absolute; bottom: 60px; right: 20px; display: flex; gap: 4px; opacity: 0.7;">
+                            <!-- Decorative Fence Slats -->
+                            <div style="width: 8px; height: 40px; background: #ffffff; border-radius: 4px 4px 0 0;"></div>
+                            <div style="width: 8px; height: 40px; background: #ffffff; border-radius: 4px 4px 0 0;"></div>
+                            <div style="width: 8px; height: 40px; background: #ffffff; border-radius: 4px 4px 0 0;"></div>
+                            <!-- Birdhouse on post next to fence -->
+                            <div style="position: absolute; bottom: 20px; left: -16px; width: 4px; height: 50px; background: #78350f;"></div>
+                            <div style="position: absolute; bottom: 65px; left: -26px; width: 24px; height: 24px; background: #b45309; border-radius: 4px;">
+                                <div style="position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: #171717; border-radius: 50%;"></div>
+                                <div style="position: absolute; top: -8px; left: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 10px solid #78350f;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 12 Grassy/Shelved Garden Plots -->
+                        <div id="garden-plots-grid" style="position: absolute; bottom: 15px; left: 5%; width: 90%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; z-index: 10;">
+                            <!-- Dynamically populated via JS -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

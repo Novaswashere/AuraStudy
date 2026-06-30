@@ -1311,14 +1311,45 @@ function addTodoItem() {
 }
 
 function toggleTodoItem(id) {
+    let justCompleted = false;
+    let completedItem = null;
+
     state.todoList = state.todoList.map(item => {
         if (item.id === id) {
-            return { ...item, completed: !item.completed };
+            const nextVal = !item.completed;
+            if (nextVal) {
+                justCompleted = true;
+                completedItem = item;
+            }
+            return { ...item, completed: nextVal };
         }
         return item;
     });
+
     saveStateToStorage();
     renderTodoList();
+
+    if (justCompleted && completedItem) {
+        // 1. Grow plant to 100% instantly
+        updateFloraGrowth(1.0);
+        
+        // 2. Play bloom confetti
+        triggerConfetti(0.4);
+        
+        // 3. Add to Garden Journal
+        addToGardenJournal();
+        
+        // 4. Award XP based on duration (2 XP per minute)
+        awardAuraXp(completedItem.duration * 2);
+        
+        // 5. Notify user
+        alert(`🎉 Task completed! Your Aura plant bloomed and you gained ${completedItem.duration * 2} XP!`);
+        
+        // 6. Reset plant to sprout/seed state after 3 seconds
+        setTimeout(() => {
+            updateFloraGrowth(0);
+        }, 3000);
+    }
 }
 
 function deleteTodoItem(id) {
@@ -1393,11 +1424,11 @@ function renderTodoList() {
         const durationBadge = document.createElement("span");
         durationBadge.textContent = `${item.duration}m`;
         durationBadge.style.cssText = `
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             background-color: var(--primary);
             color: #171717;
-            padding: 2px 6px;
-            border-radius: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
             font-weight: bold;
         `;
         
