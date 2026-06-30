@@ -22,7 +22,7 @@ AuraStudy is a lightweight, interactive web application designed to help users a
 
 ## 📂 Repository Structure
 
-\`\`\`text
+```
 AuraStudy/
 │
 ├── app.js                          # Main application logic and interactivity
@@ -30,7 +30,7 @@ AuraStudy/
 │   └── cozy fireplace.png          # Ambient background asset
 ├── LICENSE                         # Repository license
 └── README.md                       # Project documentation
-\`\`\`
+```
 
 ## 🚀 Getting Started
 
@@ -42,13 +42,13 @@ You only need a modern web browser (Chrome, Firefox, Safari, Edge) to run this a
 ### Installation
 
 1. **Clone the repository:**
-   \`\`\`bash
+   ```bash
    git clone https://github.com/your-username/AuraStudy.git
-   \`\`\`
+   ```
 2. **Navigate to the project directory:**
-   \`\`\`bash
+   ```bash
    cd AuraStudy
-   \`\`\`
+   ```
 3. **Launch the app:**
    Simply open the `index.html` file (if you have created one to link your `app.js`) in your preferred web browser, or serve it using a local development server like VS Code's Live Server.
 
