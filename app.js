@@ -2252,7 +2252,6 @@ function updateFloraGrowth(percentage) {
 
 // Generative Flow Synth Audio Engine
 let synthInterval = null;
-let audioCtx = null;
 let synthGain = null;
 let isSynthMuted = false;
 let synthVolumeLevel = 0;
