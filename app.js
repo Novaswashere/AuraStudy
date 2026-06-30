@@ -53,6 +53,12 @@ let state = {
     auraXp: 0,
     auraLevel: 1,
     gardenJournal: [],
+    activePlant: {
+        name: "🍃 Cozy Bonsai",
+        type: "cozy",
+        growth: 0
+    },
+    garden: [],
     synthVolume: 0
 };
 
@@ -110,8 +116,9 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTodoList();
     setDailyQuote();
     renderAuraStatus();
-    updateFloraGrowth(0);
-    renderGardenJournal();
+    renderActivePlantProgress();
+    updateFloraGrowth(state.activePlant ? Math.min(1.0, state.activePlant.growth / 100) : 0);
+    renderVisualGarden();
 
     // Check if music was saved as collapsed
     if (state.musicCollapsed) {
@@ -198,6 +205,16 @@ function loadStateFromStorage() {
             }
             if (!Array.isArray(state.gardenJournal)) {
                 state.gardenJournal = [];
+            }
+            if (!state.activePlant || !state.activePlant.name) {
+                state.activePlant = {
+                    name: "🍃 Cozy Bonsai",
+                    type: "cozy",
+                    growth: 0
+                };
+            }
+            if (!Array.isArray(state.garden)) {
+                state.garden = [];
             }
             if (typeof state.synthVolume !== "number" || isNaN(state.synthVolume)) {
                 state.synthVolume = 0;
@@ -361,6 +378,9 @@ function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.add("active");
+        if (modalId === "garden-modal") {
+            renderVisualGarden();
+        }
     }
 }
 
@@ -410,16 +430,11 @@ function setTheme(themeName, shouldSave = true) {
         labelEl.textContent = labels[themeName] || "Cozy";
     }
 
-    // Clear and redraw the Flora SVG structure to match the new vibe theme!
+    // Clear and redraw the Flora SVG structure
     const container = document.getElementById("aura-flora-svg-container");
     if (container) {
         container.innerHTML = "";
-        let progress = 0;
-        if (pomoIsRunning) {
-            progress = (pomoTotalDuration - pomoTimeRemaining) / pomoTotalDuration;
-        } else if (stopwatchIsRunning) {
-            progress = Math.min(1.0, Math.floor(stopwatchElapsed / 1000) / 3600);
-        }
+        let progress = state.activePlant ? Math.min(1.0, state.activePlant.growth / 100) : 0;
         updateFloraGrowth(progress);
     }
 
@@ -1037,9 +1052,9 @@ function togglePomodoro() {
             updatePomodoroDisplay();
 
             // Grow plant!
-            const elapsed = pomoTotalDuration - pomoTimeRemaining;
-            const progress = elapsed / pomoTotalDuration;
-            updateFloraGrowth(progress);
+            if (pomoActiveMode === "focus") {
+                addGrowthToActivePlant(1 / 60);
+            }
 
             // Speed up synth tempo scale (every 10 seconds)
             if (elapsed > 0 && elapsed % 10 === 0) {
@@ -1079,16 +1094,15 @@ function pomoTimerComplete() {
         state.pomoSessionsCompleted = (state.pomoSessionsCompleted || 0) + 1;
         saveStateToStorage();
 
-        // Award Flora XP & Bloom plant!
-        awardAuraXp(40);
-        addToGardenJournal();
+        // Award Pomodoro Completion Bloom Bonus (10 XP)
+        awardAuraXp(10);
 
         if (state.pomoSessionsCompleted % 2 === 0) {
             setPomodoroMode("long-break");
-            alert("2 Pomodoro focus sessions complete! Your Aura plant bloomed and you gained 90 XP in total. Starting a long break.");
+            alert("2 Pomodoro focus sessions complete! Your Aura plant grew and you gained a 10 XP bonus. Starting a long break.");
         } else {
             setPomodoroMode("short-break");
-            alert("Focus session complete! Your Aura plant bloomed and you gained 90 XP in total. Starting a short break.");
+            alert("Focus session complete! Your Aura plant grew and you gained a 10 XP bonus. Starting a short break.");
         }
     } else {
         setPomodoroMode("focus");
@@ -1198,9 +1212,8 @@ function toggleStopwatch() {
             if (currentSec !== lastElapsedSec) {
                 lastElapsedSec = currentSec;
                 
-                // Grows over 60 mins
-                const progress = Math.min(1.0, currentSec / 3600);
-                updateFloraGrowth(progress);
+                // Add growth (1 second = 1/60th of a minute)
+                addGrowthToActivePlant(1 / 60);
 
                 if (currentSec > 0 && currentSec % 10 === 0) {
                     startSynthLoop();
@@ -1330,25 +1343,8 @@ function toggleTodoItem(id) {
     renderTodoList();
 
     if (justCompleted && completedItem) {
-        // 1. Grow plant to 100% instantly
-        updateFloraGrowth(1.0);
-        
-        // 2. Play bloom confetti
-        triggerConfetti(0.4);
-        
-        // 3. Add to Garden Journal
-        addToGardenJournal();
-        
-        // 4. Award XP based on duration (2 XP per minute)
-        awardAuraXp(completedItem.duration * 2);
-        
-        // 5. Notify user
-        alert(`🎉 Task completed! Your Aura plant bloomed and you gained ${completedItem.duration * 2} XP!`);
-        
-        // 6. Reset plant to sprout/seed state after 3 seconds
-        setTimeout(() => {
-            updateFloraGrowth(0);
-        }, 3000);
+        // Add cumulative growth (lump sum since it was checked manually)
+        addGrowthToActivePlant(completedItem.duration);
     }
 }
 
@@ -1512,7 +1508,7 @@ function manualLogSession() {
     triggerConfetti(0.15);
 }
 
-function logStudySession(subject, duration) {
+function logStudySession(subject, duration, isTimerSession = false) {
     const today = getTodayDateString();
     const newSession = {
         id: "session_" + Date.now(),
@@ -1530,6 +1526,11 @@ function logStudySession(subject, duration) {
 
     // Award XP based on session duration (2 XP per minute focused)
     awardAuraXp(duration * 2);
+
+    // Add growth to active plant (only if it wasn't already ticking live on the timer)
+    if (!isTimerSession) {
+        addGrowthToActivePlant(duration);
+    }
 
     renderRecentSessions();
     renderStreaks();
@@ -2134,7 +2135,7 @@ function renderAuraStatus() {
     const xpValEl = document.getElementById("aura-xp-val");
     const barEl = document.getElementById("aura-xp-bar");
     
-    if (lvlEl) lvlEl.innerText = state.auraLevel;
+if (lvlEl) lvlEl.innerText = state.auraLevel;
     
     const xpNeeded = state.auraLevel * 100;
     if (xpValEl) xpValEl.innerText = `${state.auraXp} / ${xpNeeded} XP`;
@@ -2144,130 +2145,180 @@ function renderAuraStatus() {
     }
 }
 
-function toggleGardenJournal() {
-    const drawer = document.getElementById("garden-journal-drawer");
-    if (drawer) {
-        drawer.style.display = drawer.style.display === "none" ? "block" : "none";
-        renderGardenJournal();
-    }
-}
+// --------------------------------------------------------------------------
+// 16. Aura Flora RPG & Garden Shelf Engine
+// --------------------------------------------------------------------------
 
-const floraDisplayNames = {
-    "cozy": "🍃 Cozy Bonsai",
-    "cyberpunk": "🔮 Cyber Neon Crystal",
-    "watercolour": "🌸 Watercolor Lily",
-    "watercolor": "🌸 Watercolor Lily",
-    "cute-anime": "🍒 Sakura Sprout",
-    "anime": "🍒 Sakura Sprout",
-    "minimalist": "📐 Geometric Succulent"
+const globalPlantPool = [
+    { name: "🌻 Bright Sunflower", type: "sunflower" },
+    { name: "🌵 Starry Cactus", type: "cactus" },
+    { name: "🍄 Glowing Shroom", type: "mushroom" },
+    { name: "🌹 Cosmic Rose", type: "rose" },
+    { name: "🌿 Emerald Ivy", type: "ivy" }
+];
+
+const themePlantMapping = {
+    "cozy": { name: "🍃 Cozy Bonsai", type: "cozy" },
+    "cyberpunk": { name: "🔮 Neon Crystal", type: "cyberpunk" },
+    "watercolour": { name: "🌸 Watercolor Lily", type: "watercolour" },
+    "watercolor": { name: "🌸 Watercolor Lily", type: "watercolour" },
+    "cute-anime": { name: "🍒 Sakura Sprout", type: "cute-anime" },
+    "anime": { name: "🍒 Sakura Sprout", type: "cute-anime" },
+    "minimalist": { name: "📐 Geometric Succulent", type: "minimalist" }
 };
 
-function addToGardenJournal() {
-    const theme = state.theme || "cozy";
-    const plantName = floraDisplayNames[theme] || "🍃 Cozy Bonsai";
-    const dateStr = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    
-    if (!state.gardenJournal) state.gardenJournal = [];
-    state.gardenJournal.push({
-        name: plantName,
-        date: dateStr
-    });
-    
+function rollNewPlantSeed() {
+    const isThemeBased = Math.random() < 0.5;
+    if (isThemeBased) {
+        const activeTheme = state.theme || "cozy";
+        const mapped = themePlantMapping[activeTheme] || themePlantMapping["cozy"];
+        state.activePlant = {
+            name: mapped.name,
+            type: mapped.type,
+            growth: 0
+        };
+    } else {
+        const rolled = globalPlantPool[Math.floor(Math.random() * globalPlantPool.length)];
+        state.activePlant = {
+            name: rolled.name,
+            type: rolled.type,
+            growth: 0
+        };
+    }
     saveStateToStorage();
-    renderGardenJournal();
+    
+    // Clear and redraw
+    const container = document.getElementById("aura-flora-svg-container");
+    if (container) container.innerHTML = "";
+    updateFloraGrowth(0);
+    renderActivePlantProgress();
 }
 
-function renderGardenJournal() {
-    const container = document.getElementById("garden-journal-list");
-    if (!container) return;
-    
-    if (!state.gardenJournal || state.gardenJournal.length === 0) {
-        container.innerHTML = `<span style="color: var(--text-muted); font-style: italic;">No plants in journal yet. Complete a study session to grow!</span>`;
-        return;
+function addGrowthToActivePlant(minutes) {
+    if (!state.activePlant || !state.activePlant.name) {
+        rollNewPlantSeed();
     }
     
-    container.innerHTML = state.gardenJournal.map(item => `
-        <span style="background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 4px;">
-            ${item.name} <small style="opacity: 0.6; font-weight: normal;">(${item.date})</small>
-        </span>
-    `).join("");
+    // Maturing a plant takes exactly 60 minutes of cumulative study/focus
+    const minutesNeeded = 60;
+    const growthAdded = (minutes / minutesNeeded) * 100;
+    
+    state.activePlant.growth = Math.min(100, (state.activePlant.growth || 0) + growthAdded);
+    saveStateToStorage();
+    
+    // Render progress visually
+    const progressPercent = Math.min(1.0, state.activePlant.growth / 100);
+    updateFloraGrowth(progressPercent);
+    renderActivePlantProgress();
+    
+    // Check if fully grown
+    if (state.activePlant.growth >= 100) {
+        setTimeout(() => {
+            potActivePlantToGarden();
+        }, 1200);
+    }
+}
+
+function renderActivePlantProgress() {
+    const growth = state.activePlant ? Math.round(state.activePlant.growth) : 0;
+    const bar = document.getElementById("active-plant-growth-bar");
+    const val = document.getElementById("active-plant-growth-val");
+    const statusText = document.getElementById("flora-status-text");
+    
+    if (bar) bar.style.width = `${growth}%`;
+    if (val) val.innerText = `${growth}%`;
+    if (statusText && state.activePlant) {
+        if (growth >= 100) {
+            statusText.innerText = `✨ ${state.activePlant.name} fully grown! ✨`;
+        } else if (growth > 0) {
+            statusText.innerText = `Growing: ${state.activePlant.name}`;
+        } else {
+            statusText.innerText = `Seed: ${state.activePlant.name}`;
+        }
+    }
+}
+
+function potActivePlantToGarden() {
+    if (!state.activePlant || state.activePlant.growth < 100) return;
+    
+    if (!state.garden) state.garden = [];
+    const nextPlot = state.garden.length;
+    
+    if (nextPlot < 12) {
+        const completedPlant = {
+            name: state.activePlant.name,
+            type: state.activePlant.type,
+            plot: nextPlot,
+            date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        };
+        state.garden.push(completedPlant);
+        saveStateToStorage();
+        
+        triggerConfetti(0.55);
+        alert(`✨ CONGRATULATIONS! Your ${state.activePlant.name} has been fully grown and potted in your Visual Garden plot #${nextPlot + 1}! ✨`);
+    } else {
+        alert("Your garden is fully populated! Completed plants will continue to award you XP.");
+    }
+    
+    // Roll the next seed automatically
+    rollNewPlantSeed();
+    renderVisualGarden();
+}
+
+function renderVisualGarden() {
+    const grid = document.getElementById("garden-plots-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    
+    const gardenList = state.garden || [];
+    
+    for (let i = 0; i < 12; i++) {
+        const plot = document.createElement("div");
+        const plant = gardenList.find(p => p.plot === i);
+        
+        if (plant) {
+            plot.className = "garden-plot occupied";
+            plot.innerHTML = `
+                <div class="plot-plant">
+                    ${getPlantSVGContent(plant.type, true)}
+                </div>
+                <div class="plot-pot"></div>
+                <div class="garden-plot-tooltip">${plant.name} (Grown ${plant.date})</div>
+            `;
+        } else {
+            plot.className = "garden-plot";
+            plot.innerHTML = `
+                <i data-lucide="lock" style="width: 16px; height: 16px; opacity: 0.35;"></i>
+                <div class="garden-plot-tooltip">Plot #${i + 1} - Locked</div>
+            `;
+        }
+        grid.appendChild(plot);
+    }
+    
+    if (window.lucide) lucide.createIcons();
 }
 
 function updateFloraGrowth(percentage) {
     const container = document.getElementById("aura-flora-svg-container");
     if (!container) return;
-
+    
+    const plantType = state.activePlant ? state.activePlant.type : "cozy";
+    
     if (!container.querySelector("svg")) {
-        const theme = state.theme || "cozy";
-        let svgContent = "";
-
-        if (theme === "cyberpunk") {
-            svgContent = `
-                <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                    <path class="flora-pot" d="M35,90 L65,90 L70,105 L30,105 Z" />
-                    <path class="flora-stem" d="M50,90 L50,45 L50,30" style="stroke: #ff007f; stroke-dasharray: 60; stroke-dashoffset: 60;" />
-                    <polygon class="flora-leaf" points="50,70 30,65 50,60" style="fill: #00f0ff;" />
-                    <polygon class="flora-leaf" points="50,55 70,50 50,45" style="fill: #00f0ff;" />
-                    <polygon class="flora-flower" points="50,15 35,35 50,45 65,35" style="fill: #ff007f; stroke: #00f0ff;" />
-                </svg>
-            `;
-        } else if (theme === "watercolour" || theme === "watercolor") {
-            svgContent = `
-                <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                    <path class="flora-pot" d="M30,90 L70,90 L60,105 L40,105 Z" />
-                    <path class="flora-stem" d="M50,90 C45,70 55,50 50,35" style="stroke: #0d9488; stroke-dasharray: 65; stroke-dashoffset: 65;" />
-                    <circle class="flora-leaf" cx="38" cy="65" r="8" style="fill: #0d9488;" />
-                    <circle class="flora-leaf" cx="62" cy="52" r="8" style="fill: #0d9488;" />
-                    <path class="flora-flower" d="M50,35 C42,25 35,35 50,15 C65,35 58,25 50,35" style="fill: #f43f5e;" />
-                </svg>
-            `;
-        } else if (theme === "cute-anime" || theme === "anime") {
-            svgContent = `
-                <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                    <path class="flora-pot" d="M35,90 L65,90 L60,105 L40,105 Z" />
-                    <path class="flora-stem" d="M50,90 Q40,65 50,40" style="stroke: #db2777; stroke-dasharray: 60; stroke-dashoffset: 60;" />
-                    <path class="flora-leaf" d="M43,65 C33,65 38,55 43,65" style="fill: #f472b6;" />
-                    <path class="flora-leaf" d="M47,50 C57,50 52,40 47,50" style="fill: #f472b6;" />
-                    <circle class="flora-flower" cx="50" cy="35" r="8" style="fill: #fdf2f8; stroke: #db2777;" />
-                </svg>
-            `;
-        } else if (theme === "minimalist") {
-            svgContent = `
-                <svg width="100" height="110" viewBox="0 0 100 110">
-                    <path class="flora-pot" d="M32,90 L68,90 L68,105 L32,105 Z" />
-                    <path class="flora-stem" d="M50,90 L50,40" style="stroke: var(--text-main); stroke-dasharray: 50; stroke-dashoffset: 50;" />
-                    <polygon class="flora-leaf" points="50,75 35,70 50,65" style="fill: var(--text-muted);" />
-                    <polygon class="flora-leaf" points="50,60 65,55 50,50" style="fill: var(--text-muted);" />
-                    <polygon class="flora-flower" points="50,40 40,25 50,15 60,25" style="fill: var(--text-main); stroke: var(--border-color);" />
-                </svg>
-            `;
-        } else {
-            // Cozy (Default)
-            svgContent = `
-                <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                    <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" />
-                    <path class="flora-stem" d="M50,90 Q55,60 50,30" style="stroke: #15803d; stroke-dasharray: 65; stroke-dashoffset: 65;" />
-                    <path class="flora-leaf" d="M46,65 C38,60 40,50 48,55 Z" style="fill: #22c55e;" />
-                    <path class="flora-leaf" d="M54,50 C62,45 60,35 52,40 Z" style="fill: #22c55e;" />
-                    <circle class="flora-flower" cx="50" cy="25" r="9" style="fill: #eab308; stroke: #eab308;" />
-                </svg>
-            `;
-        }
-
-        container.innerHTML = svgContent;
+        container.innerHTML = getPlantSVGContent(plantType, false);
     }
-
+    
     const stem = container.querySelector(".flora-stem");
     const leaves = container.querySelectorAll(".flora-leaf");
     const flower = container.querySelector(".flora-flower");
     const statusText = document.getElementById("flora-status-text");
-
+    
     if (stem) {
         const dashArray = parseFloat(stem.style.strokeDasharray);
         const newOffset = dashArray * (1 - percentage);
         stem.style.strokeDashoffset = newOffset;
     }
-
+    
     if (leaves.length > 0) {
         if (percentage >= 0.3) leaves[0].classList.add("visible");
         else leaves[0].classList.remove("visible");
@@ -2276,23 +2327,128 @@ function updateFloraGrowth(percentage) {
         if (percentage >= 0.6) leaves[1].classList.add("visible");
         else leaves[1].classList.remove("visible");
     }
-
+    
     if (flower) {
         if (percentage >= 0.95) {
             flower.classList.add("visible");
-            if (statusText) statusText.innerText = "Aura Flora Bloomed!";
+            if (statusText && state.activePlant) statusText.innerText = `✨ ${state.activePlant.name} bloomed! ✨`;
         } else {
             flower.classList.remove("visible");
-            if (statusText) {
-                if (percentage > 0) {
-                    statusText.innerText = `Growing (${Math.round(percentage * 100)}%)`;
-                } else {
-                    statusText.innerText = "Sprout sleeping...";
-                }
-            }
         }
     }
 }
+
+function getPlantSVGContent(type, isMatured = false) {
+    let strokeOffset = isMatured ? 0 : null;
+    let visibleClass = isMatured ? "visible" : "";
+    
+    if (type === "cyberpunk") {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
+                <path class="flora-pot" d="M35,90 L65,90 L70,105 L30,105 Z" style="fill: #3f3f46;" />
+                <path class="flora-stem" d="M50,90 L50,45 L50,30" style="stroke: #ff007f; stroke-dasharray: 60; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 60};" />
+                <polygon class="flora-leaf ${visibleClass}" points="50,70 30,65 50,60" style="fill: #00f0ff;" />
+                <polygon class="flora-leaf ${visibleClass}" points="50,55 70,50 50,45" style="fill: #00f0ff;" />
+                <polygon class="flora-flower ${visibleClass}" points="50,15 35,35 50,45 65,35" style="fill: #ff007f; stroke: #00f0ff;" />
+            </svg>
+        `;
+    } else if (type === "watercolour" || type === "watercolor") {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
+                <path class="flora-pot" d="M30,90 L70,90 L60,105 L40,105 Z" style="fill: #475569;" />
+                <path class="flora-stem" d="M50,90 C45,70 55,50 50,35" style="stroke: #0d9488; stroke-dasharray: 65; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 65};" />
+                <circle class="flora-leaf ${visibleClass}" cx="38" cy="65" r="8" style="fill: #0d9488;" />
+                <circle class="flora-leaf ${visibleClass}" cx="62" cy="52" r="8" style="fill: #0d9488;" />
+                <path class="flora-flower ${visibleClass}" d="M50,35 C42,25 35,35 50,15 C65,35 58,25 50,35" style="fill: #f43f5e;" />
+            </svg>
+        `;
+    } else if (type === "cute-anime" || type === "anime") {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
+                <path class="flora-pot" d="M35,90 L65,90 L60,105 L40,105 Z" style="fill: #78350f;" />
+                <path class="flora-stem" d="M50,90 Q40,65 50,40" style="stroke: #db2777; stroke-dasharray: 60; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 60};" />
+                <path class="flora-leaf ${visibleClass}" d="M43,65 C33,65 38,55 43,65" style="fill: #f472b6;" />
+                <path class="flora-leaf ${visibleClass}" d="M47,50 C57,50 52,40 47,50" style="fill: #f472b6;" />
+                <circle class="flora-flower ${visibleClass}" cx="50" cy="35" r="8" style="fill: #fdf2f8; stroke: #db2777;" />
+            </svg>
+        `;
+    } else if (type === "minimalist") {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110">
+                <path class="flora-pot" d="M32,90 L68,90 L68,105 L32,105 Z" style="fill: #171717;" />
+                <path class="flora-stem" d="M50,90 L50,40" style="stroke: var(--text-main); stroke-dasharray: 50; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 50};" />
+                <polygon class="flora-leaf ${visibleClass}" points="50,75 35,70 50,65" style="fill: var(--text-muted);" />
+                <polygon class="flora-leaf ${visibleClass}" points="50,60 65,55 50,50" style="fill: var(--text-muted);" />
+                <polygon class="flora-flower ${visibleClass}" points="50,40 40,25 50,15 60,25" style="fill: var(--text-main); stroke: var(--border-color);" />
+            </svg>
+        `;
+    } else if (type === "sunflower") {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
+                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #78350f;" />
+                <path class="flora-stem" d="M50,90 L50,45" style="stroke: #22c55e; stroke-width: 4px; stroke-linecap: round; fill: none; stroke-dasharray: 45; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 45};" />
+                <circle class="flora-leaf ${visibleClass}" cx="42" cy="68" r="6" style="fill: #22c55e;" />
+                <circle class="flora-leaf ${visibleClass}" cx="58" cy="58" r="6" style="fill: #22c55e;" />
+                <g class="flora-flower ${visibleClass}">
+                    <circle cx="50" cy="35" r="14" style="fill: #eab308; stroke: #ca8a04; stroke-width: 1px;" />
+                    <circle cx="50" cy="35" r="7" style="fill: #451a03;" />
+                </g>
+            </svg>
+        `;
+    } else if (type === "cactus") {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
+                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #d1d5db;" />
+                <path class="flora-stem" d="M50,90 L50,45" style="stroke: #166534; stroke-width: 14px; stroke-linecap: round; fill: none; stroke-dasharray: 45; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 45};" />
+                <line class="flora-leaf ${visibleClass}" x1="43" y1="75" x2="38" y2="75" style="stroke: #f3f4f6; stroke-width: 1.5px;" />
+                <line class="flora-leaf ${visibleClass}" x1="57" y1="60" x2="62" y2="60" style="stroke: #f3f4f6; stroke-width: 1.5px;" />
+                <polygon class="flora-flower ${visibleClass}" points="50,45 44,35 50,28 56,35" style="fill: #f43f5e;" />
+            </svg>
+        `;
+    } else if (type === "mushroom") {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
+                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #4b5563;" />
+                <path class="flora-stem" d="M50,90 L50,55" style="stroke: #f3f4f6; stroke-width: 12px; stroke-linecap: round; fill: none; stroke-dasharray: 35; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 35};" />
+                <path class="flora-flower ${visibleClass}" d="M30,55 C30,25 70,25 70,55 Z" style="fill: #ef4444;" />
+                <circle class="flora-flower ${visibleClass}" cx="42" cy="40" r="3" style="fill: #ffffff;" />
+                <circle class="flora-flower ${visibleClass}" cx="58" cy="45" r="3" style="fill: #ffffff;" />
+            </svg>
+        `;
+    } else if (type === "rose") {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
+                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #3f3f46;" />
+                <path class="flora-stem" d="M50,90 C45,70 52,50 50,38" style="stroke: #065f46; stroke-width: 4px; stroke-linecap: round; fill: none; stroke-dasharray: 55; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 55};" />
+                <polygon class="flora-leaf ${visibleClass}" points="47,65 35,62 46,55" style="fill: #065f46;" />
+                <polygon class="flora-leaf ${visibleClass}" points="53,52 65,49 54,42" style="fill: #065f46;" />
+                <path class="flora-flower ${visibleClass}" d="M50,38 C40,25 60,25 50,38 Z" style="fill: #b91c1c;" />
+            </svg>
+        `;
+    } else if (type === "ivy") {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
+                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #7c2d12;" />
+                <path class="flora-stem" d="M50,90 C35,70 65,50 50,28" style="stroke: #166534; stroke-width: 3px; stroke-linecap: round; fill: none; stroke-dasharray: 70; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 70};" />
+                <circle class="flora-leaf ${visibleClass}" cx="40" cy="72" r="5" style="fill: #15803d;" />
+                <circle class="flora-leaf ${visibleClass}" cx="58" cy="55" r="5" style="fill: #15803d;" />
+                <circle class="flora-flower ${visibleClass}" cx="46" cy="35" r="5" style="fill: #16a34a;" />
+            </svg>
+        `;
+    } else {
+        return `
+            <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
+                <path class="flora-pot" d="M30,90 L70,90 L65,105 L35,105 Z" style="fill: #7c2d12;" />
+                <path class="flora-stem" d="M50,90 Q55,60 50,30" style="stroke: #15803d; stroke-dasharray: 65; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 65};" />
+                <path class="flora-leaf ${visibleClass}" d="M46,65 C38,60 40,50 48,55 Z" style="fill: #22c55e;" />
+                <path class="flora-leaf ${visibleClass}" d="M54,50 C62,45 60,35 52,40 Z" style="fill: #22c55e;" />
+                <circle class="flora-flower ${visibleClass}" cx="50" cy="25" r="9" style="fill: #eab308; stroke: #eab308;" />
+            </svg>
+        `;
+    }
+}
+
+
 
 // Generative Flow Synth Audio Engine (Now running Binaural Focus Waves)
 let synthInterval = null;

@@ -2921,6 +2921,66 @@ body.video-active .video-bg-container {
     animation: flora-glow 3s infinite ease-in-out;
 }
 
+/* Grassy Lawn Garden Plots */
+.garden-plot {
+    background: rgba(0, 0, 0, 0.15);
+    border: 2px dashed rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+}
+.garden-plot:hover {
+    border-color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.25);
+}
+.garden-plot.occupied {
+    background: none;
+    border: none;
+}
+.garden-plot .plot-pot {
+    position: absolute;
+    bottom: -2px;
+    width: 46px;
+    height: 18px;
+    background: #a16207; /* wood/clay pot styling */
+    border-bottom: 3px solid #78350f;
+    border-radius: 4px 4px 8px 8px;
+    z-index: 1;
+    opacity: 0.9;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+.garden-plot .plot-plant {
+    position: absolute;
+    bottom: 10px;
+    z-index: 2;
+    transform: scale(0.65);
+    transform-origin: bottom center;
+}
+.garden-plot-tooltip {
+    position: absolute;
+    bottom: -22px;
+    font-size: 0.65rem;
+    background: rgba(23, 23, 23, 0.85);
+    color: #fff;
+    padding: 3px 6px;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, bottom 0.2s ease;
+    white-space: nowrap;
+    z-index: 20;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.garden-plot:hover .garden-plot-tooltip {
+    opacity: 1;
+    bottom: -18px;
+}
+
+
 
 
 
