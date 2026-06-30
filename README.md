@@ -1,39 +1,53 @@
-# AuraStudy
-A Github repositry dedicated to aura study.
-
 # 🌟 AuraStudy
 
 > **Elevate your study sessions with ambient environments and focused productivity.**
 
-AuraStudy is a lightweight, interactive web application designed to help users achieve deep work and maintain focus. By combining productivity tools with immersive, aesthetic environments (like a cozy fireplace), AuraStudy creates the perfect digital atmosphere for studying, coding, or reading.
+AuraStudy is a lightweight, interactive web application designed to help users achieve deep work and maintain focus. By combining productivity tools with immersive, aesthetic environments, AuraStudy creates the perfect digital atmosphere for studying, coding, or reading.
 
 ## ✨ Features
 
-* **Ambient Environments:** Immerse yourself in aesthetic backgrounds like the `Cozy Fireplace` to set the mood.
-* **Focused Workspace:** Clean, distraction-free user interface designed strictly for productivity.
-* **Dynamic Logic:** Powered by a custom JavaScript engine (`app.js`) to handle state, timers, and user interactions smoothly.
-* **Lightweight & Fast:** Built without heavy, bloated frameworks to ensure instant load times and zero lag.
+* **Ambient Environments:** Immerse yourself in customizable aesthetic backgrounds (Cozy Fireplace, Rainy Cafe, Lofi Girl, Cyberpunk Rain).
+* **Bento Grid Workspace:** Customisable dashboard with toggleable modules:
+  * **Pomodoro Timer & Stopwatch:** Standard focus and session timers.
+  * **To-Do List & Study Logger:** Log tasks and track focus sessions directly from the workspace.
+  * **Clock Station:** World clocks for global synchronization.
+  * **Daily Streaks & Gamification:** Build daily streaks with custom goals and confetti celebrations.
+  * **Focus Analytics:** Track and visualize study patterns using integrated charts.
+  * **Audio Mixer:** Soundscape controller to mix ambient rain and fireplace sounds.
+* **Lightweight & Fast:** Built on vanilla JS to ensure instant load times and zero lag.
 
 ## 🛠️ Tech Stack
 
-* **JavaScript (Vanilla):** Core application logic, event handling, and DOM manipulation (`app.js`).
-* **HTML5 & CSS3:** Structure, responsive layout, and visual styling.
-* **Media Assets:** High-quality imagery for environmental immersion.
+* **Frontend:** HTML5, CSS3 (Vanilla), JavaScript (Vanilla)
+* **Libraries & Assets:**
+  * **Chart.js:** For visualizing focus analytics.
+  * **Canvas Confetti:** For celebrating study milestones and streak increases.
+  * **Lucide Icons:** Premium, modern icon set.
+  * **Google Fonts:** Custom fonts tailored for different visual styles (Comfortaa, Orbitron, Fira Code, etc.).
 
 ## 📂 Repository Structure
 
 ```
 AuraStudy/
 │
-├── server.py                       # local host server script
-├── run_server.bat                  # Creates a localhost server and redirects you to your default bowser
-├── app.js                          # Main application logic and interactivity
-├── style.css                       # Main application styling
-├── index.html                      # Main application wireframe and skeleton
+├── server.py                       # Python local host server script
+├── run_server.bat                  # Runs server.py and opens AuraStudy in your default browser
+├── app.js                          # Main application logic, state, and interactivity
+├── style.css                       # Main application styling (aesthetic, minimalist, cyberpunk, anime themes)
+├── index.html                      # Main HTML structure and onboarding experience
+│
 ├── images/                         # Ambient background assets
-│   └── cozy fireplace.png
-├── sounds/                         # Ambient Music Assets
-|   └── ambient_rain.m4a           
+│   ├── cozy fireplace.png
+│   ├── cyberpunk rain.png
+│   ├── lofi girl.png
+│   └── rainy cafe.png
+│
+├── sounds/                         # Ambient audio assets
+│   ├── ambient_rain.m4a           
+│   ├── fireplace.mp3
+│   ├── fireplace2.mp3
+│   └── rainy down with birds singing.mp3
+│
 ├── LICENSE                         # Repository license
 └── README.md                       # Project documentation
 ```
@@ -43,7 +57,7 @@ AuraStudy/
 To run AuraStudy locally on your machine, follow these simple steps:
 
 ### Prerequisites
-You only need a modern web browser (Chrome, Firefox, Safari, Edge) to run this application.
+You only need a modern web browser (Chrome, Firefox, Safari, Edge) to run this application. If you want to run the local server script, you will need Python installed.
 
 ### Installation
 
@@ -56,13 +70,7 @@ You only need a modern web browser (Chrome, Firefox, Safari, Edge) to run this a
    cd AuraStudy
    ```
 3. **Launch the app:**
-   Simply open the `index.html` file (if you have created one to link your `app.js`) in your preferred web browser, or serve it using a local development server like VS Code's Live Server.
-
-## 🧠 How It Works (Under the Hood)
-
-The core engine of AuraStudy lives inside `app.js`. This file handles:
-* **UI State Management:** Toggling between different ambient scenes (e.g., loading the fireplace image).
-* **Productivity Logic:** Managing focus states and interactive elements on the screen.
+   Simply double-click the `run_server.bat` file to start a local server and open the app in your default browser, or open `index.html` directly in your browser.
 
 ## 🤝 Contributing
 
