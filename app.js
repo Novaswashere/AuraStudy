@@ -2127,6 +2127,10 @@ function triggerConfetti(durationSeconds) {
     else if (state.theme === 'minimalist') colors = ['#171717', '#737373', '#a3a3a3'];
 
     (function frame() {
+        if (typeof confetti !== "function") {
+            console.warn("Confetti script is not loaded.");
+            return;
+        }
         confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
         confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: colors });
         if (Date.now() < end) {
@@ -2491,7 +2495,7 @@ function getPlantSVGContent(type, isMatured = false) {
     } else {
         return `
             <svg width="100" height="110" viewBox="0 0 100 110" class="aura-flora-active">
-                <path class="flora-pot" d="M35,90 L70,90 L66,105 M30,105 L32,90 Z" fill="#7c2d12" />
+                <path class="flora-pot" d="M32,90 L68,90 L64,105 L36,105 Z" fill="#7c2d12" />
                 <path class="flora-stem" d="M50,90 C45,75 40,65 50,50 C55,42 45,35 50,25" stroke="#6e5a4f" stroke-width="5" fill="none" stroke-linecap="round" style="stroke-dasharray: 80; stroke-dashoffset: ${strokeOffset !== null ? strokeOffset : 80};" />
                 <ellipse class="flora-leaf ${visibleClass}" cx="35" cy="55" rx="14" ry="10" fill="#a3b899" />
                 <ellipse class="flora-leaf ${visibleClass}" cx="62" cy="45" rx="12" ry="8" fill="#a3b899" />

@@ -2170,11 +2170,21 @@ body[data-theme="cyberpunk"] .week-day-badge.completed .week-day-icon {
     overflow-x: auto;
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-    scrollbar-width: none; /* Firefox */
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) rgba(255, 255, 255, 0.05);
 }
 .music-tabs::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    height: 4px;
+    display: block;
+}
+.music-tabs::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+.music-tabs::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 4px;
 }
 
 .tab-btn {
@@ -3558,16 +3568,8 @@ body[data-theme="minimalist"] .toast-close {
 /* Mobile Responsive Fixes for Audio Workspace */
 @media (max-width: 768px) {
     .music-tabs {
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 6px;
+        padding-bottom: 8px;
         gap: 8px;
-        /* Hide scrollbar but maintain touch scrolling */
-        scrollbar-width: none;
-    }
-    .music-tabs::-webkit-scrollbar {
-        display: none;
     }
     .tab-btn {
         flex: 0 0 auto;
