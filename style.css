@@ -2254,12 +2254,22 @@ body[data-theme="cyberpunk"] .week-day-badge.completed .week-day-icon {
 
 .ambient-slider {
     flex-grow: 1;
+    min-width: 0; /* Allows the slider to shrink dynamically to fit narrow columns */
     accent-color: var(--primary);
     height: 5px;
     background: var(--border-color);
     border-radius: 5px;
     outline: none;
     cursor: pointer;
+}
+
+.volume-percent {
+    font-size: 0.75rem;
+    font-weight: 700;
+    min-width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+    color: var(--text-main);
 }
 
 .btn-audio-mute {
