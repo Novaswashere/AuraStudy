@@ -3545,6 +3545,34 @@ body[data-theme="minimalist"] .toast-close {
     color: #737373;
 }
 
+/* Mobile Responsive Fixes for Audio Workspace */
+@media (max-width: 480px) {
+    .music-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 6px;
+        gap: 8px;
+        /* Hide scrollbar but maintain touch scrolling */
+        scrollbar-width: none;
+    }
+    .music-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    .tab-btn {
+        flex: 0 0 auto;
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+    .dashboard-widget {
+        padding: 16px !important;
+    }
+    .ambient-mixer-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
 
 
 

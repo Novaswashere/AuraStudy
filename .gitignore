@@ -1,0 +1,19 @@
+# Firebase Cache / Log files
+.firebase/
+firebase-debug.log
+ui-debug.log
+
+# Node / Dependency folders
+node_modules/
+package-lock.json
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local server files / server script caches
+__pycache__/
+*.pyc
+run_server.bat
+server.py
