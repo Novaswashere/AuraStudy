@@ -2166,7 +2166,15 @@ body[data-theme="cyberpunk"] .week-day-badge.completed .week-day-icon {
 /* Expanded Embed Player styling */
 .music-tabs {
     display: flex;
-    gap: 4px;
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none; /* Firefox */
+}
+.music-tabs::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .tab-btn {
@@ -2180,6 +2188,8 @@ body[data-theme="cyberpunk"] .week-day-badge.completed .week-day-icon {
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: all 0.2s;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .tab-btn.active {
@@ -3546,7 +3556,7 @@ body[data-theme="minimalist"] .toast-close {
 }
 
 /* Mobile Responsive Fixes for Audio Workspace */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .music-tabs {
         overflow-x: auto;
         white-space: nowrap;
