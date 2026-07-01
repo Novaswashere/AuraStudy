@@ -201,9 +201,40 @@ document.addEventListener("DOMContentLoaded", () => {
         lucide.createIcons();
     }
 
+    // Setup strict numeric input validation
+    setupNumericInputValidation();
+
     // Check if date changed since last load to roll over daily goals
     checkDateRollover();
 });
+
+function setupNumericInputValidation() {
+    const numericInputs = [
+        "todo-duration",
+        "session-duration",
+        "input-focus",
+        "input-short-break",
+        "input-long-break"
+    ];
+    numericInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            // Prevent typing 'e', 'E', '+', '-', '.', ',', etc.
+            el.addEventListener("keypress", (e) => {
+                if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+            // Prevent paste events that contain non-numeric characters
+            el.addEventListener("paste", (e) => {
+                const pasteData = (e.clipboardData || window.clipboardData).getData("text");
+                if (!/^\d+$/.test(pasteData)) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+}
 
 // --------------------------------------------------------------------------
 // 2.5 Daily Motivational Quote
@@ -1210,18 +1241,27 @@ function togglePomoSettings() {
 }
 
 function savePomodoroSettings() {
-    const f = parseInt(document.getElementById("input-focus").value, 10);
-    const s = parseInt(document.getElementById("input-short-break").value, 10);
-    const l = parseInt(document.getElementById("input-long-break").value, 10);
+    const rawF = document.getElementById("input-focus").value.trim();
+    const rawS = document.getElementById("input-short-break").value.trim();
+    const rawL = document.getElementById("input-long-break").value.trim();
 
-    if (f && s && l) {
-        state.pomo.focus = f;
-        state.pomo.short = s;
-        state.pomo.long = l;
-        saveStateToStorage();
-        resetPomodoro();
-        togglePomoSettings();
+    const isPositiveInteger = (val) => /^[1-9]\d*$/.test(val);
+
+    if (!isPositiveInteger(rawF) || !isPositiveInteger(rawS) || !isPositiveInteger(rawL)) {
+        alert("Please enter valid positive integers for all timer settings.");
+        return;
     }
+
+    const f = parseInt(rawF, 10);
+    const s = parseInt(rawS, 10);
+    const l = parseInt(rawL, 10);
+
+    state.pomo.focus = f;
+    state.pomo.short = s;
+    state.pomo.long = l;
+    saveStateToStorage();
+    resetPomodoro();
+    togglePomoSettings();
 }
 
 // --------------------------------------------------------------------------
@@ -1384,12 +1424,21 @@ function addTodoItem() {
     const todoDurationInput = document.getElementById("todo-duration");
 
     const text = todoTextInput.value.trim();
-    const duration = parseInt(todoDurationInput.value, 10) || 25;
+    const rawDuration = todoDurationInput.value.trim();
 
     if (!text) {
         alert("Please enter a task description.");
         return;
     }
+
+    // Validate that duration is a positive integer
+    const isPositiveInteger = /^[1-9]\d*$/.test(rawDuration);
+    if (!isPositiveInteger) {
+        alert("Please enter a valid positive integer for minutes.");
+        return;
+    }
+
+    const duration = parseInt(rawDuration, 10);
 
     if (!state.todoList) state.todoList = [];
 
@@ -1570,12 +1619,21 @@ function manualLogSession() {
     const durationInput = document.getElementById("session-duration");
 
     const subject = subjectInput.value.trim();
-    const duration = parseInt(durationInput.value, 10);
+    const rawDuration = durationInput.value.trim();
 
-    if (!subject || !duration || duration <= 0) {
-        alert("Please enter a study subject and a valid positive duration in minutes.");
+    if (!subject) {
+        alert("Please enter a study subject.");
         return;
     }
+
+    // Validate that duration is a positive integer
+    const isPositiveInteger = /^[1-9]\d*$/.test(rawDuration);
+    if (!isPositiveInteger) {
+        alert("Please enter a valid positive integer for minutes.");
+        return;
+    }
+
+    const duration = parseInt(rawDuration, 10);
 
     logStudySession(subject, duration);
 
