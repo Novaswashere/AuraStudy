@@ -2244,6 +2244,8 @@ body[data-theme="cyberpunk"] .week-day-badge.completed .week-day-icon {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap; /* Allows text wrapping for long labels */
+    word-break: break-word;
 }
 
 .slider-row {
@@ -2280,6 +2282,16 @@ body[data-theme="cyberpunk"] .week-day-badge.completed .week-day-icon {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0; /* Prevents mute button from squishing */
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-audio-mute:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--primary);
 }
 
 .btn-audio-mute.active {
@@ -3597,6 +3609,9 @@ body[data-theme="minimalist"] .toast-close {
         grid-template-columns: 1fr;
         gap: 10px;
     }
+    .binaural-card {
+        grid-column: span 1 !important; /* Force to single column on mobile/tablet viewports */
+    }
 }
 
 @media (max-width: 480px) {
@@ -3616,6 +3631,12 @@ body[data-theme="minimalist"] .toast-close {
         gap: 6px;
     }
     .ambient-label {
+        font-size: 0.75rem;
+    }
+    .binaural-card {
+        grid-column: span 1 !important;
+    }
+    .binaural-label {
         font-size: 0.75rem;
     }
 }
