@@ -2886,18 +2886,13 @@ body.video-active .video-bg-container {
 
 /* SVG Plant Styling */
 .flora-pot {
-    fill: var(--text-muted);
-    opacity: 0.6;
+    opacity: 0.85;
 }
 .flora-stem {
-    stroke: var(--primary);
-    stroke-width: 4px;
-    stroke-linecap: round;
     fill: none;
     transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .flora-leaf {
-    fill: var(--primary);
     opacity: 0;
     transform: scale(0);
     transform-origin: center;
@@ -2908,9 +2903,6 @@ body.video-active .video-bg-container {
     transform: scale(1);
 }
 .flora-flower {
-    fill: var(--text-main);
-    stroke: var(--primary);
-    stroke-width: 1.5px;
     opacity: 0;
     transform: scale(0);
     transform-origin: center;
@@ -3017,7 +3009,7 @@ body.video-active .video-bg-container {
     width: 100%;
 }
 .todo-duration-input {
-    width: 90px;
+    width: 110px;
     font-size: 0.95rem;
     font-weight: bold;
     text-align: center;
@@ -3269,78 +3261,137 @@ body.video-active .video-bg-container {
 
 /* Premium scenery backdrop for Focus Garden */
 .garden-scenery {
-    height: 380px;
+    height: 415px;
     width: 100%;
-    background: linear-gradient(to bottom, #a0c4ff 0%, #c1d3fe 45%, #b7e4c7 45%, #74c69d 70%, #52b788 100%);
+    background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
     position: relative;
     overflow: hidden;
+    border-radius: 12px;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
 }
-.garden-clouds {
+body[data-theme="aesthetic"] .garden-scenery {
+    background: linear-gradient(180deg, #fefae0 0%, #dda15e 100%);
+}
+body[data-theme="minimalist"] .garden-scenery {
+    background: #fafafa;
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+body[data-theme="cyberpunk"] .garden-scenery {
+    background: linear-gradient(180deg, #090514 0%, #120a24 100%);
+}
+body[data-theme="watercolour"] .garden-scenery {
+    background: linear-gradient(180deg, #eaeef6 0%, #b7cbdc 100%);
+}
+
+/* Subtly draw horizontal wooden shelf lines under rows */
+.garden-scenery::before {
+    content: '';
     position: absolute;
-    top: 20px;
     width: 100%;
-    height: 60px;
-    pointer-events: none;
-}
-.cloud {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.75);
-    border-radius: 20px;
-    filter: blur(1px);
-}
-.cloud-1 {
-    width: 80px;
-    height: 25px;
-    left: 10%;
-    animation: floatCloud 25s infinite linear;
-}
-.cloud-2 {
-    width: 110px;
-    height: 30px;
-    right: 15%;
-    animation: floatCloud 35s infinite linear reverse;
-}
-@keyframes floatCloud {
-    0% { transform: translateX(0); }
-    50% { transform: translateX(40px); }
-    100% { transform: translateX(0); }
-}
-.garden-hills {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 160px;
-    pointer-events: none;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: linear-gradient(to bottom,
+        transparent 124px, rgba(139, 90, 43, 0.45) 124px, rgba(92, 58, 33, 0.45) 130px, transparent 130px,
+        transparent 254px, rgba(139, 90, 43, 0.45) 254px, rgba(92, 58, 33, 0.45) 260px, transparent 260px,
+        transparent 384px, rgba(139, 90, 43, 0.45) 384px, rgba(92, 58, 33, 0.45) 390px, transparent 390px
+    );
     z-index: 1;
+    pointer-events: none;
 }
-.hill {
-    position: absolute;
-    border-radius: 50%;
-    width: 140%;
-    left: -20%;
-}
-.hill-back {
-    height: 200px;
-    background: linear-gradient(to bottom, #b7e4c7, #95d5b2);
-    bottom: -60px;
-    opacity: 0.85;
-}
-.hill-front {
-    height: 170px;
-    background: linear-gradient(to bottom, #95d5b2, #74c69d);
-    bottom: -80px;
-    z-index: 2;
+body[data-theme="minimalist"] .garden-scenery::before {
+    background: linear-gradient(to bottom,
+        transparent 124px, var(--border-color) 124px, var(--border-color) 125px, transparent 125px,
+        transparent 254px, var(--border-color) 254px, var(--border-color) 255px, transparent 255px,
+        transparent 384px, var(--border-color) 384px, var(--border-color) 385px, transparent 385px
+    );
 }
 
 .garden-plots-grid {
     position: absolute;
-    bottom: 20px;
-    left: 5%;
-    width: 90%;
+    top: 15px;
+    left: 2.5%;
+    width: 95%;
+    height: 385px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 20px;
     z-index: 10;
+    box-sizing: border-box;
+}
+
+/* Grassy Lawn Garden Plots Overhaul */
+.garden-plot {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    transition: all 0.25s ease;
+    padding-bottom: 10px;
+    box-sizing: border-box;
+}
+body[data-theme="minimalist"] .garden-plot {
+    border-radius: 4px;
+    background: transparent;
+    border: 1px dashed var(--border-color);
+}
+.garden-plot:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+body[data-theme="minimalist"] .garden-plot:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+.garden-plot.occupied {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+body[data-theme="minimalist"] .garden-plot.occupied {
+    background: #ffffff;
+    box-shadow: none;
+}
+.garden-plot.occupied:hover {
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
+}
+.garden-plot .plot-pot {
+    width: 44px;
+    height: 20px;
+    background: #a16207; /* Clay pot styling */
+    border-bottom: 3px solid #78350f;
+    border-radius: 2px 2px 8px 8px;
+    z-index: 2;
+    opacity: 0.95;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+body[data-theme="minimalist"] .garden-plot .plot-pot {
+    background: #171717;
+    border-bottom: none;
+    border-radius: 0;
+}
+.garden-plot .plot-plant {
+    width: 100px;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: -15px; /* sit inside the pot */
+    z-index: 1;
+    transform: scale(0.65);
+    transform-origin: bottom center;
+}
+.garden-plot i[data-lucide="lock"] {
+    margin-bottom: auto;
+    margin-top: auto;
+    opacity: 0.3;
 }
 
 /* Micro-animations for potted plants */
@@ -3362,6 +3413,138 @@ body.video-active .video-bg-container {
     animation: activeSproutSway 5s infinite ease-in-out;
     transform-origin: bottom center;
 }
+
+/* To-Do List Alignment & Styling Fixes */
+.todo-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-grow: 1;
+    min-width: 0;
+}
+.todo-left span {
+    word-break: break-word;
+    font-size: 0.9rem;
+}
+.todo-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.todo-duration {
+    font-size: 0.8rem;
+    background-color: var(--primary);
+    color: #171717;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+body[data-theme="minimalist"] .todo-duration,
+body[data-theme="cyberpunk"] .todo-duration {
+    color: #ffffff;
+}
+
+/* Glassmorphic Toast Notification System */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 400px;
+    width: calc(100% - 40px);
+    pointer-events: none;
+}
+.toast-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    transform: translateX(120%);
+    transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.35s ease;
+    opacity: 0;
+    pointer-events: auto;
+}
+body[data-theme="minimalist"] .toast-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 6px;
+    backdrop-filter: none;
+}
+body[data-theme="cyberpunk"] .toast-card {
+    background: rgba(18, 10, 36, 0.9);
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);
+    border-radius: 0px;
+}
+.toast-card.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-main);
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+body[data-theme="minimalist"] .toast-content {
+    color: #171717;
+}
+.toast-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    color: var(--primary);
+}
+.toast-card.toast-levelup .toast-icon {
+    color: #ec4899;
+}
+.toast-card.toast-success .toast-icon {
+    color: #10b981;
+}
+.toast-card.toast-warning .toast-icon {
+    color: #f59e0b;
+}
+.toast-message {
+    font-weight: 550;
+    font-family: var(--font-main);
+}
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    opacity: 0.65;
+    transition: opacity 0.2s, transform 0.2s;
+    padding: 0 4px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+.toast-close:hover {
+    opacity: 1;
+    color: var(--text-main);
+    transform: scale(1.1);
+}
+body[data-theme="minimalist"] .toast-close {
+    color: #737373;
+}
+
 
 
 

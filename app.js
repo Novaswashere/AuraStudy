@@ -99,7 +99,65 @@ let isEditMode = false;
 // 2. Application Init & Lifecycle
 // --------------------------------------------------------------------------
 
+function initNotifications() {
+    if (!document.getElementById("toast-container")) {
+        const container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+    window.alert = function (message) {
+        showNotification(message);
+    };
+}
+
+function showNotification(message) {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = "toast-card";
+    
+    let icon = "info";
+    if (message.includes("LEVEL UP")) {
+        toast.classList.add("toast-levelup");
+        icon = "sparkles";
+    } else if (message.includes("CONGRATULATIONS") || message.includes("grown") || message.includes("complete")) {
+        toast.classList.add("toast-success");
+        icon = "trophy";
+    } else if (message.includes("Please")) {
+        toast.classList.add("toast-warning");
+        icon = "alert-triangle";
+    }
+
+    toast.innerHTML = `
+        <div class="toast-content">
+            <i data-lucide="${icon}" class="toast-icon"></i>
+            <span class="toast-message">${message}</span>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    
+    container.appendChild(toast);
+    if (window.lucide) lucide.createIcons();
+
+    setTimeout(() => {
+        toast.classList.add("show");
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 5000);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    initNotifications();
     loadStateFromStorage();
     initTheme();
     initVideoBackground();
@@ -172,6 +230,18 @@ function setDailyQuote() {
     }
 }
 
+function normalizeDateString(dateStr) {
+    if (!dateStr) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+    }
+    const parsed = new Date(dateStr);
+    if (!isNaN(parsed.getTime())) {
+        return formatDate(parsed);
+    }
+    return dateStr;
+}
+
 function loadStateFromStorage() {
     const saved = localStorage.getItem("aurastudy_state");
     if (saved) {
@@ -195,6 +265,14 @@ function loadStateFromStorage() {
                     "widget-music"
                 ];
             }
+
+            if (state.sessions) {
+                state.sessions.forEach(s => {
+                    s.date = normalizeDateString(s.date);
+                    s.duration = Number(s.duration || 0);
+                });
+            }
+            state.lastActiveDate = normalizeDateString(state.lastActiveDate);
 
             // Ensure Aura Flora variables exist
             if (typeof state.auraXp !== "number" || isNaN(state.auraXp)) {
@@ -238,8 +316,15 @@ function checkDateRollover() {
     }
 }
 
+function formatDate(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const date = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${date}`;
+}
+
 function getTodayDateString() {
-    return new Date().toLocaleDateString('en-CA');
+    return formatDate(new Date());
 }
 
 // --------------------------------------------------------------------------
@@ -424,6 +509,15 @@ function setTheme(themeName, shouldSave = true) {
     const labelEl = document.getElementById("active-theme-label");
     if (labelEl) {
         labelEl.textContent = labels[themeName] || "Cozy";
+    }
+
+    // Morph theme-based plants to match the new active theme
+    const themeTypes = ["cozy", "cyberpunk", "watercolour", "watercolor", "cute-anime", "anime", "minimalist"];
+    if (state.activePlant && themeTypes.includes(state.activePlant.type)) {
+        const mapped = themePlantMapping[themeName] || themePlantMapping["cozy"];
+        state.activePlant.type = mapped.type;
+        state.activePlant.name = mapped.name;
+        renderActivePlantProgress();
     }
 
     // Clear and redraw the Flora SVG structure
@@ -1339,8 +1433,8 @@ function toggleTodoItem(id) {
     renderTodoList();
 
     if (justCompleted && completedItem) {
-        // Add cumulative growth (lump sum since it was checked manually)
-        addGrowthToActivePlant(completedItem.duration);
+        // Log study session so it updates streaks, daily focus mins, analytics, and stats
+        logStudySession(completedItem.text, completedItem.duration);
     }
 }
 
@@ -1575,14 +1669,14 @@ function renderRecentSessions() {
 function getDailyStudyMinutes(dateString) {
     return state.sessions
         .filter(s => s.date === dateString)
-        .reduce((sum, s) => sum + s.duration, 0);
+        .reduce((sum, s) => sum + Number(s.duration || 0), 0);
 }
 
 function verifyStreakValidity() {
     const todayStr = getTodayDateString();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+    const yesterdayStr = formatDate(yesterday);
 
     const minutesToday = getDailyStudyMinutes(todayStr);
     const goalMetToday = minutesToday >= state.dailyGoalMins;
@@ -1610,14 +1704,14 @@ function calculateConsecutiveStreak() {
     let checkDate = new Date();
     
     // If we haven't studied today, start checking from yesterday to keep the streak alive
-    const todayStr = checkDate.toLocaleDateString('en-CA');
+    const todayStr = formatDate(checkDate);
     if (getDailyStudyMinutes(todayStr) === 0) {
         checkDate.setDate(checkDate.getDate() - 1);
     }
     
     // Count consecutive days going backwards
     while (true) {
-        const dateStr = checkDate.toLocaleDateString('en-CA');
+        const dateStr = formatDate(checkDate);
         if (getDailyStudyMinutes(dateStr) > 0) {
             streakCount++;
             checkDate.setDate(checkDate.getDate() - 1);
@@ -1672,7 +1766,7 @@ function renderStreaks() {
 }
 
 function renderStats() {
-    const totalMinutes = state.sessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalMinutes = state.sessions.reduce((sum, s) => sum + Number(s.duration || 0), 0);
     const hours = Math.floor(totalMinutes / 60);
     const mins = totalMinutes % 60;
     
@@ -1697,7 +1791,14 @@ function setChartRange(range) {
 }
 
 function renderCharts() {
-    const ctx = document.getElementById("analyticsChart").getContext("2d");
+    if (typeof Chart === "undefined") {
+        console.warn("Chart.js is not loaded yet.");
+        return;
+    }
+    const canvas = document.getElementById("analyticsChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
     if (analyticsChartInstance) {
         analyticsChartInstance.destroy();
     }
