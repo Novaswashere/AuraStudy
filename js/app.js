@@ -449,8 +449,8 @@ const layoutPresets = {
 };
 
 function finishOnboarding() {
-    const goalVal = document.querySelector('input[name="study-goal"]:checked').value;
-    const struggleVal = document.querySelector('input[name="study-struggle"]:checked').value;
+    const goalVals = Array.from(document.querySelectorAll('input[name="study-goal"]:checked')).map(cb => cb.value);
+    const struggleVals = Array.from(document.querySelectorAll('input[name="study-struggle"]:checked')).map(cb => cb.value);
     const themeVal = document.querySelector('input[name="selected-theme"]:checked').value;
     const backdropVal = document.querySelector('input[name="selected-backdrop"]:checked').value;
 
@@ -462,28 +462,46 @@ function finishOnboarding() {
         if (switchEl) switchEl.checked = cb.checked;
     });
 
-    // Preset positions based on Goal!
-    if (layoutPresets[goalVal]) {
-        state.widgetOrder = JSON.parse(JSON.stringify(layoutPresets[goalVal]));
+    // Fallbacks if nothing selected
+    const primaryGoal = goalVals.length > 0 ? goalVals[0] : "consistency";
+
+    // Preset positions based on primary Goal
+    if (layoutPresets[primaryGoal]) {
+        state.widgetOrder = JSON.parse(JSON.stringify(layoutPresets[primaryGoal]));
     } else {
         state.widgetOrder = JSON.parse(JSON.stringify(layoutPresets.focus));
     }
 
-    state.goal = goalVal;
-    state.struggle = struggleVal;
+    state.goal = goalVals; // Now an array
+    state.struggle = struggleVals; // Now an array
     state.theme = themeVal;
     state.backgroundVideo = backdropVal;
     state.onboarded = true;
     state.lastActiveDate = getTodayDateString();
+
+    // Add Starter Tasks if none exist
+    if (!state.todoList || state.todoList.length === 0) {
+        state.todoList = [
+            { id: "todo_" + Date.now() + "1", text: "Start a 25-minute Pomodoro session", duration: 25, completed: false },
+            { id: "todo_" + Date.now() + "2", text: "Explore workspace settings", duration: null, completed: false }
+        ];
+    }
 
     saveStateToStorage();
     setTheme(themeVal);
     setBackgroundImage(backdropVal);
     initWidgetsVisibility();
     applyWidgetOrder();
+    renderTodoList(); // refresh UI with starter tasks
     
     closeOnboardingModal();
     triggerConfetti(0.25);
+}
+
+function restartOnboarding() {
+    state.onboarded = false;
+    saveStateToStorage();
+    location.reload();
 }
 
 function openModal(modalId) {

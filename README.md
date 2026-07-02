@@ -32,10 +32,18 @@ AuraStudy/
 │
 ├── server.py                       # Python local host server script
 ├── run_server.bat                  # Runs server.py and opens AuraStudy in your default browser
-├── app.js                          # Main application logic, state, and interactivity
-├── style.css                       # Main application styling (aesthetic, minimalist, cyberpunk, anime themes)
 ├── index.html                      # Main HTML structure and onboarding experience
 │
+├── css/                            # Stylesheets
+│   └── style.css                   # Main application styling (aesthetic, minimalist, cyberpunk, anime themes)
+│
+├── js/                             # JavaScript files
+│   └── app.js                      # Main application logic, state, and interactivity
+│
+├── scripts/                        # Utility scripts
+│   ├── fix_html.py                 # Automated UI/UX fixer for HTML
+│   ├── fix_styles.py               # Automated UI/UX fixer for CSS
+│   └── ux_reviewer.py              # Automated AI reviewer script
 ├── images/                         # Ambient background assets
 │   ├── cozy fireplace.png
 │   ├── cyberpunk rain.png
